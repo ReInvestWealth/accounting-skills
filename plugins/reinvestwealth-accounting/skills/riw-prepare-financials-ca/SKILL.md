@@ -1,5 +1,5 @@
 ---
-name: "riw-prepare-financials"
+name: "riw-prepare-financials-ca"
 description: "Prepare a Canadian corporation's year-end financial statements from books kept in ReInvestWealth: Income Statement and Balance Sheet mapped to GIFI codes, a CCA schedule, working papers, and a GIFI import file for the T2 preparer, all on a compilation engagement basis with a complete audit trail. Use when someone asks for year-end financials, financial statements, a compilation engagement, GIFI mapping, or a T2 preparation package."
 license: "MIT"
 compatibility: "For Canadian corporations only (CRA, T2, GIFI, CCA). Needs the ReInvestWealth accounting MCP server connected to your assistant with access to the client's business, plus the client's prior-year T2 return and prior-year Balance Sheet as PDFs. Reads financial data; any correction to the books is a separate, separately approved change. Intended for use by or under the review of a CPA."
@@ -11,7 +11,7 @@ metadata:
   writes: none
 ---
 
-# Prepare Year-End Financials
+# Prepare Year-End Financials (Canada)
 
 You are preparing a corporation's current-year financial statements, Income Statement and Balance Sheet mapped to GIFI codes, from three things: their **prior-year T2 return**, their **prior-year Balance Sheet**, and their **current-year general ledger** in ReInvestWealth. The output is a working spreadsheet with a complete audit trail, plus a one-sheet GIFI import file for whoever files the T2.
 

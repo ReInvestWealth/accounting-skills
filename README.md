@@ -12,7 +12,7 @@ MIT licensed. Fork them, change them, use them on your own clients.
 |---|---|---|
 | `riw-monday-brief` | One page for Monday morning: cash position, last week's sales and spending, invoices waiting to be paid, and the three things worth doing this week | No |
 | `riw-cash-flow-forecast` | 30, 60 and 90 day cash outlook from open invoices, recurring costs, and known tax dates. Names the low point, which is what answers "can I make payroll" | No |
-| `riw-prepare-financials` | Canadian year-end: Income Statement and Balance Sheet mapped to GIFI, CCA schedule, working papers, and a GIFI import file for the T2 preparer | No |
+| `riw-prepare-financials-ca` | Canadian year-end: Income Statement and Balance Sheet mapped to GIFI, CCA schedule, working papers, and a GIFI import file for the T2 preparer | No |
 | `riw-monthly-review-email` | The monthly client review: a short three-page report plus a draft email, for a bookkeeper to send instead of the monthly call | No |
 | `riw-migrate` | Move a client onto ReInvestWealth: opening balances, historical transactions, or both. Plan, review, approve, apply | **Yes** |
 
@@ -22,7 +22,7 @@ These skills read and write your books through the **ReInvestWealth accounting M
 
 Without the MCP server connected, a skill will load and then tell you it has no data to work with.
 
-`riw-prepare-financials` is Canada only, because it is built around the T2, GIFI codes, and CCA. The rest work in both Canada and the United States, with the sales-tax handling in `riw-migrate` being Canada specific.
+`riw-prepare-financials-ca` is Canada only, because it is built around the T2, GIFI codes, and CCA. The rest work in both Canada and the United States, with the sales-tax handling in `riw-migrate` being Canada specific.
 
 ## Install
 
@@ -59,7 +59,7 @@ The skill is written around that. It plans everything first, asserts its own tie
 
 These skills are written procedures, not a service. Running one does not create an accounting, bookkeeping, or tax engagement with ReInvestWealth, and nothing they produce is accounting, tax, or financial advice.
 
-- **Output is review-ready, not file-ready.** `riw-prepare-financials` produces statements on a compilation basis for a CPA to review. It does not file anything, and it does not replace professional judgment.
+- **Output is review-ready, not file-ready.** `riw-prepare-financials-ca` produces statements on a compilation basis for a CPA to review. It does not file anything, and it does not replace professional judgment.
 - **You are responsible for what gets posted.** `riw-migrate` writes to real bookkeeping data, and posted entries are permanent by design. Read the review table before you approve it.
 - **An assistant can be confidently wrong.** Every skill here is written to show its assumptions and its tie-outs for exactly that reason. Check them.
 
