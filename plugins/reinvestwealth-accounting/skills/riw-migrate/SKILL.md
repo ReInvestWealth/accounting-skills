@@ -117,7 +117,7 @@ Give every posted entry a name with an uppercase prefix that identifies the migr
 
 ---
 
-## Mode A — Opening balances
+## Mode A: Opening balances
 
 **Inputs.** Ask for anything missing before starting:
 
@@ -156,7 +156,7 @@ The app rolls prior-period profit and loss into retained earnings, so these D-mi
 
 ---
 
-## Mode B — Transaction history
+## Mode B: Transaction history
 
 **Inputs.** Ask for anything missing:
 

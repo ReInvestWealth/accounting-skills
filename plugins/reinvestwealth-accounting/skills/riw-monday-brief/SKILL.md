@@ -49,13 +49,13 @@ If the business has more than one entity and the user did not say which, ask onc
 
 ---
 
-## Phase 1 — Fix the window, say it out loud
+## Phase 1: Fix the window, say it out loud
 
 The week is **the last completed Monday to Sunday**, not the trailing seven days. State it with real dates on the page ("Week of March 3 to 9"). If today is Monday, that is the week that ended yesterday.
 
 Confirm which business you are briefing, and get its home jurisdiction and currency, because they change the wording (GST/HST language and e-filing deadlines are Canada only) and the currency symbol.
 
-## Phase 2 — Pull, then prove
+## Phase 2: Pull, then prove
 
 Pull everything in the table above in as few calls as you can. Then run these checks **before you write a word of the page**:
 
@@ -65,7 +65,7 @@ Pull everything in the table above in as few calls as you can. Then run these ch
 
 If a check fails, do not publish a brief with a caveat. Find the cause, and if you cannot, say plainly which block you could not produce.
 
-## Phase 3 — The four blocks
+## Phase 3: The four blocks
 
 **1. Cash on hand.** Total across accounts, then each account on its own line with its balance and when it last synced. One line under it: net movement over the week just ended, and whether that is up or down. If an account is stale, the warning goes here, first.
 
@@ -83,7 +83,7 @@ Never blend the two definitions in one number.
 
 **4. Book health, in one line.** The count of uncategorized and pending transactions, and what they add up to. This is the honest caveat on every other number on the page, and it is also the most common reason one of the three actions exists.
 
-## Phase 4 — The three things to do
+## Phase 4: The three things to do
 
 This is the part that earns the page. Rank candidates by **money at stake, times how fast the owner can actually move it**, and take the top three.
 
@@ -100,7 +100,7 @@ Each action is three short parts: **what to do, why it matters with the number i
 
 If the week was genuinely clean, say so in a sentence and give one forward-looking action instead of padding to three. An honest "nothing is on fire" builds more trust than three invented chores, and it is the reason they will open next week's brief too.
 
-## Phase 5 — Deliver
+## Phase 5: Deliver
 
 Output the page as markdown by default, tight enough to fit one screen. Offer to render it as a PDF or an email if the user wants to send it on.
 

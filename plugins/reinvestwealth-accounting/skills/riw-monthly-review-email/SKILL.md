@@ -54,13 +54,13 @@ Profit and Loss for the target month and the two before it; the transaction deta
 
 ---
 
-## Phase 1 — Scope
+## Phase 1: Scope
 
 Confirm the business and state which month you are reporting, in words: "June, with April and May beside it for context". Ask once whether there is a personal note for the email. Ask nothing else at this stage.
 
 Note the jurisdiction, because it changes the vocabulary. Canada: GST, HST, PST, QST, CRA, Revenu Quebec, and the shareholder account. United States: state sales tax where it applies, IRS, and owner draws or distributions rather than a shareholder account. Never mix the two vocabularies in one report.
 
-## Phase 2 — Pull and compute
+## Phase 2: Pull and compute
 
 Pull the three months. Compute, all net of sales tax:
 
@@ -71,7 +71,7 @@ Pull the three months. Compute, all net of sales tax:
 - Sales tax collected against input credits for the month, and the net position (Canada).
 - A short list of data-quality questions: uncategorized, low confidence, still pending. These feed the **email only**.
 
-## Phase 3 — Check the numbers before anyone sees them
+## Phase 3: Check the numbers before anyone sees them
 
 This is a summary, not an audit, but never send a figure you have not sanity-checked:
 
@@ -84,7 +84,7 @@ This is a summary, not an audit, but never send a figure you have not sanity-che
 
 If something is materially wrong, fix the cause and rebuild. Do not paper over it in the copy.
 
-## Phase 4 — Build it and look at it
+## Phase 4: Build it and look at it
 
 Three pages:
 
@@ -96,11 +96,11 @@ Render it as self-contained HTML with inline styles, then to PDF. **Then actuall
 
 Then read the draft email back. It should be short and warm: what the month did in a sentence or two, the personal note if there is one, the two or three things to confirm, and an offer to talk. Not a wall of accounting.
 
-## Phase 5 — Present for approval, and stop
+## Phase 5: Present for approval, and stop
 
 Show the user the rendered report and the draft email: subject, body, and the recipient address, read out loud. **This is a gate. Do not send anything until the user explicitly says to send it.**
 
-## Phase 6 — Send, only on approval
+## Phase 6: Send, only on approval
 
 Only after explicit approval:
 

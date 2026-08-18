@@ -72,6 +72,14 @@ Issues and pull requests welcome, particularly from accountants who hit somethin
 1. **No client data.** No real names, business identifiers, or figures from anyone's books, in code or in examples.
 2. **Say why.** A rule in one of these files should explain what goes wrong without it. That is what makes them worth reading.
 
+Before you open a pull request, run:
+
+```
+node scripts/validate-skills.mjs
+```
+
+No install needed, it uses only Node built-ins. CI runs the same check on every pull request. It mostly exists to catch one nasty failure: frontmatter that does not parse as YAML loads with **every field silently dropped**, so the skill shows up with no name and no description and simply never gets used. The usual cause is an unquoted value containing a colon, which is what a natural-sounding description does. Quote your values.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

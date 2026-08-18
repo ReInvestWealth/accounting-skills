@@ -1,0 +1,24 @@
+name: Validate skills
+
+# Runs on every pull request, including from forks, which is how outside
+# contributions arrive. A fork PR gets the read-only default token, and this
+# check needs no token at all, so it works for contributors without any secrets.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # No install step: the validator uses only Node built-ins, so there is
+      # nothing to cache and nothing to audit.
+      - run: node scripts/validate-skills.mjs

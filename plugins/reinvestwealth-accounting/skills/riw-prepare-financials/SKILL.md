@@ -52,14 +52,14 @@ Generate both from the **same** finalized data so they cannot drift apart. Never
 
 Workbook tabs, in order:
 
-1. **Cover** — client, fiscal year, jurisdiction, basis of presentation, preparer, date, status
-2. **Income Statement** — condensed for a micro-entrepreneur, current versus prior year, each line tagged with its GIFI code
-3. **Balance Sheet** — essential captions, current versus prior year, each line tagged with its GIFI code, must balance
-4. **GIFI Map** — every statement line, its GIFI code, and the accounts that roll into it
-5. **CCA Schedule** — Schedule 8 continuity by class, plus a short additions and disposals detail with the date, description, class and amount of each (and proceeds for disposals)
-6. **Working Papers** — every statement figure traced back to accounts and transactions
-7. **Query Log** — every question raised, its status, and its resolution
-8. **Trial Balance** — the full adjusted trial balance the statements are built from
+1. **Cover:** client, fiscal year, jurisdiction, basis of presentation, preparer, date, status
+2. **Income Statement:** condensed for a micro-entrepreneur, current versus prior year, each line tagged with its GIFI code
+3. **Balance Sheet:** essential captions, current versus prior year, each line tagged with its GIFI code, must balance
+4. **GIFI Map:** every statement line, its GIFI code, and the accounts that roll into it
+5. **CCA Schedule:** Schedule 8 continuity by class, plus a short additions and disposals detail with the date, description, class and amount of each (and proceeds for disposals)
+6. **Working Papers:** every statement figure traced back to accounts and transactions
+7. **Query Log:** every question raised, its status, and its resolution
+8. **Trial Balance:** the full adjusted trial balance the statements are built from
 
 ---
 
@@ -83,7 +83,7 @@ Not simplified: the audit trail, the tie-outs, the CCA schedule, and GIFI accura
 
 ---
 
-## Phase 1 — Intake and setup
+## Phase 1: Intake and setup
 
 1. Confirm all three inputs are present and list exactly what you received.
 2. Establish and confirm with the user:
@@ -97,13 +97,13 @@ Not simplified: the audit trail, the tie-outs, the CCA schedule, and GIFI accura
    - Confirm that **amortization in the financial statements follows CCA**, which is normally the client's direction here. The CCA Schedule is the amortization support.
 3. State the engagement parameters back in one short block and wait for confirmation before extracting anything.
 
-## Phase 2 — Confirm the reference points
+## Phase 2: Confirm the reference points
 
 **CCA rates and first-year incentive rules change from year to year. Do not rely on memory.** Confirm the rate and the first-year treatment for every class you touch against current CRA Schedule 8 guidance, or against the client's T2 software, for this specific fiscal year. Write down what you confirmed and when.
 
 The same applies to GIFI codes: reuse the codes the prior-year T2 actually used wherever the account existed last year, rather than the code you would have picked fresh.
 
-## Phase 3 — Prior-year position and the current-year ledger
+## Phase 3: Prior-year position and the current-year ledger
 
 *The prior year sets the opening balances. Get them exact before you look at a single current-year transaction.*
 
@@ -141,7 +141,7 @@ Also expect:
 - **Sign convention:** positive is an outflow. A depository account's balance is the negative of the sum of its amounts; a credit card's amount owing is the positive sum. Confirm this against a known balance rather than assuming it.
 - **Excluded and post-year-end rows:** deleted transactions are out, and expect transactions dated after the year end because the new fiscal year is already accumulating.
 
-## Phase 4 — Deep-dive review
+## Phase 4: Deep-dive review
 
 *Scale this to a micro-business. A small ledger does not need a large-corporation audit. Be thorough on anything that materially changes the statements; log the rest and carry a sensible default. Quality of questions over quantity: a micro-entrepreneur should not be buried in queries.*
 
@@ -168,7 +168,7 @@ For every issue, add a Query Log entry: ID, account, issue, why it matters, ques
 
 Do not proceed until the trial balance balances and all blocking queries are resolved.
 
-## Phase 5 — CCA and adjusting entries
+## Phase 5: CCA and adjusting entries
 
 1. **Additions and disposals by class.** Record the **date** of each: the available-for-use date drives the first-year rule, and disposals need proceeds. Present a short additions and disposals detail, one row each: date, description, class, amount. A short list, not a fixed-asset register. A missing date is `[NEEDS INPUT]` and a question, never a guess.
 2. **Build the Schedule 8 continuity per class:** opening UCC, plus additions with the current-year first-year rules applied as they stand for this fiscal year (verify, do not assume), less disposals at the lesser of proceeds and cost, times the class rate, giving CCA for the year and closing UCC. Handle terminal loss and recapture, and flag them for the T2 preparer without advising.
@@ -178,7 +178,7 @@ Do not proceed until the trial balance balances and all blocking queries are res
 
 Present the proposed adjusting entries and the CCA schedule to the user and wait for sign-off before finalizing.
 
-## Phase 6 — GIFI mapping and the statements
+## Phase 6: GIFI mapping and the statements
 
 **1. Map every adjusted-TB account to a GIFI code.** Reuse the exact codes the prior-year T2 used for any account that existed last year. Assign a new code only for genuinely new accounts. Record every mapping on the GIFI Map tab, which keeps full account-by-account detail even where the face groups things together.
 
@@ -211,7 +211,7 @@ Keep the prior-year grouping identical to the current year so the columns line u
 
 If a tie-out fails, fix the cause. **Never force a balancing figure.**
 
-## Phase 7 — Working papers
+## Phase 7: Working papers
 
 Build the Working Papers tab so a reviewer can trace **every** statement figure back to source:
 
@@ -224,14 +224,14 @@ Build the Working Papers tab so a reviewer can trace **every** statement figure 
 
 The standard: a CPA opening this cold can follow any number on the statements down to the transactions behind it without asking you a question.
 
-## Phase 8 — Build both files
+## Phase 8: Build both files
 
 1. Assemble the finalized figures into a single structured data set, then generate the workbook and the GIFI import file **from that same data**.
 2. The GIFI import sheet is one sheet: GIFI code, description, type, amount, split into an S125 block and an S100 block. Mark each row `detail` or `subtotal` so an importer that recomputes its own subtotals can filter to detail rows. **Without that column an importer double-counts.** Emit a row for every statement line carrying a code, and skip presentation-only subtotals with no code, which the tax software computes itself.
 3. **Watch this trap: GIFI 8299, total income, includes 8231, foreign exchange.** If you present an FX gain or loss below operating income on the statement face, 8299 comes out understated in the import file even though net income is right. Put the FX line in the revenue section so the face and the GIFI file agree; that is also how Schedule 125 prints it. Verify that 8299 equals the sum of the revenue detail rows and 9367 equals the sum of the expense detail rows, and fail loudly if not.
 4. Verify: the Balance Sheet balances, every tie-out reads pass, and no `[NEEDS INPUT]` placeholder remains.
 
-## Phase 9 — Review and deliver
+## Phase 9: Review and deliver
 
 1. Present a short summary: revenue, net income, total assets, key flags, and the count of open versus resolved queries.
 2. Surface the Query Log items still open for client confirmation.

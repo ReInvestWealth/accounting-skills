@@ -57,7 +57,7 @@ A business can end the quarter comfortable and still miss payroll in week six. A
 
 ---
 
-## Phase 1 — Starting position
+## Phase 1: Starting position
 
 Today's cash, per account, from the balances the app reports. Never derive it by summing transactions.
 
@@ -65,7 +65,7 @@ Check each account's last-synced time. A forecast built on a feed that is four d
 
 Confirm the currency and the jurisdiction. For a business with accounts in more than one currency, forecast in the business's base currency and say which rate basis you used.
 
-## Phase 2 — Expected inflows
+## Phase 2: Expected inflows
 
 Start from open invoices only. Draft invoices are not inflows, they are unsent. Paid, void, and uncollectible are out.
 
@@ -83,7 +83,7 @@ Then apply collection reality, and show it as a line item rather than burying it
 
 Do not forecast new sales that do not exist yet unless the user explicitly asks for a growth assumption. If they do, it is a separate, clearly labelled line, and it never touches the base case.
 
-## Phase 3 — Expected outflows
+## Phase 3: Expected outflows
 
 **Recurring costs, detected from history.** Group transactions by merchant and look for a regular cadence at a stable amount: monthly subscriptions, rent, insurance, loan payments, software, utilities. For each candidate record the merchant, the typical amount, the cadence, and the day of the month it usually lands.
 
@@ -100,7 +100,7 @@ Watch for:
 
 **One-offs the user knows about.** Ask once: anything large and unusual in the next 90 days, either direction. A planned equipment purchase or a tax refund changes the answer completely and is not in the history.
 
-## Phase 4 — Build the path
+## Phase 4: Build the path
 
 Walk **week by week** for 90 days. Monthly buckets hide the trough, which is the entire point of the exercise, so weekly is the default. Offer monthly as a summary on top, never instead.
 
@@ -116,7 +116,7 @@ Then judge it, in plain language:
 - Low point below roughly one month of operating costs: **thin.** Name the figure and say what one month of costs is, so the comparison is visible.
 - Low point comfortable in both scenarios: say that clearly and briefly. Do not manufacture concern.
 
-## Phase 5 — Confidence, honestly
+## Phase 5: Confidence, honestly
 
 State it, with the reason:
 
@@ -126,7 +126,7 @@ State it, with the reason:
 - **Backlog:** a large uncategorized pile means the run rate is provisional.
 - **Seasonality you could not measure.** With less than a year of data you cannot see it. Say so rather than implying the pattern holds.
 
-## Phase 6 — Deliver
+## Phase 6: Deliver
 
 Lead with the answer in one or two sentences, then the weekly table, then the assumptions, then confidence. Markdown by default; offer a PDF.
 
