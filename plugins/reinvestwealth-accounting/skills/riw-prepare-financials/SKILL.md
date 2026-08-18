@@ -5,7 +5,7 @@ license: "MIT"
 compatibility: "For Canadian corporations only (CRA, T2, GIFI, CCA). Needs the ReInvestWealth accounting MCP server connected to your assistant with access to the client's business, plus the client's prior-year T2 return and prior-year Balance Sheet as PDFs. Reads financial data; any correction to the books is a separate, separately approved change. Intended for use by or under the review of a CPA."
 metadata:
   publisher: ReInvestWealth
-  homepage: https://reinvestwealth.com/skills
+  homepage: https://www.reinvestwealth.com/skills
   version: 0.1.0
   jurisdiction: CA
   writes: none

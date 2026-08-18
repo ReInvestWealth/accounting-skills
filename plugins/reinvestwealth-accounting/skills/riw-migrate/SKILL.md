@@ -5,7 +5,7 @@ license: "MIT"
 compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant with write access to the target business. WRITES TO PRODUCTION BOOKKEEPING DATA. Posted entries are permanent. Intended for accountants and bookkeepers, or an owner working with one. Sales tax handling is Canada specific; the rest applies in Canada and the United States."
 metadata:
   publisher: ReInvestWealth
-  homepage: https://reinvestwealth.com/skills
+  homepage: https://www.reinvestwealth.com/skills
   version: 0.1.0
   writes: transactions
   risk: high

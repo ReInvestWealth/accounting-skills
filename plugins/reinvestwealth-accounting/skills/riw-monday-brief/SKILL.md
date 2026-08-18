@@ -5,7 +5,7 @@ license: "MIT"
 compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant, with access to at least one business. Read only, no writes. Works for Canadian and United States businesses."
 metadata:
   publisher: ReInvestWealth
-  homepage: https://reinvestwealth.com/skills
+  homepage: https://www.reinvestwealth.com/skills
   version: 0.1.0
   writes: none
 ---
