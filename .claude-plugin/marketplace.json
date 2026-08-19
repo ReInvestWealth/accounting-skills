@@ -10,7 +10,7 @@
       "name": "reinvestwealth-accounting",
       "source": "./plugins/reinvestwealth-accounting",
       "displayName": "ReInvestWealth Accounting Skills",
-      "description": "Weekly brief, cash-flow forecast, year-end financials, monthly client review, and client migration skills for books kept in ReInvestWealth.",
+      "description": "Weekly brief, cash-flow forecast, financing package, year-end financials, monthly client review, and client migration skills for books kept in ReInvestWealth.",
       "version": "0.1.0",
       "author": {
         "name": "ReInvestWealth",

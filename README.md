@@ -12,7 +12,9 @@ MIT licensed. Fork them, change them, use them on your own clients.
 |---|---|---|
 | `riw-monday-brief` | One page for Monday morning: cash position, last week's sales and spending, invoices waiting to be paid, and the three things worth doing this week | No |
 | `riw-cash-flow-forecast` | 30, 60 and 90 day cash outlook from open invoices, recurring costs, and known tax dates. Names the low point, which is what answers "can I make payroll" | No |
+| `riw-financing-package` | The short package a lender asks for: twelve months of income and expenses, a balance sheet, cash position, and receivables, labelled management-prepared and ready to attach to an application | No |
 | `riw-prepare-financials-ca` | Canadian year-end: Income Statement and Balance Sheet mapped to GIFI, CCA schedule, working papers, and a GIFI import file for the T2 preparer | No |
+| `riw-prepare-financials-us` | US year-end: Income Statement and Balance Sheet on the income tax basis, depreciation schedule, working papers, and a return mapping file for the 1120 or 1120-S preparer | No |
 | `riw-monthly-review-email` | The monthly client review: a short three-page report plus a draft email, for a bookkeeper to send instead of the monthly call | No |
 | `riw-migrate` | Move a client onto ReInvestWealth: opening balances, historical transactions, or both. Plan, review, approve, apply | **Yes** |
 
@@ -22,7 +24,7 @@ These skills read and write your books through the **ReInvestWealth accounting M
 
 Without the MCP server connected, a skill will load and then tell you it has no data to work with.
 
-`riw-prepare-financials-ca` is Canada only, because it is built around the T2, GIFI codes, and CCA. The rest work in both Canada and the United States, with the sales-tax handling in `riw-migrate` being Canada specific.
+The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-migrate` being Canada specific.
 
 ## Install
 
