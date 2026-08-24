@@ -10,7 +10,7 @@ MIT licensed. Fork them, change them, use them on your own clients.
 
 | Skill | What it does | Writes to your books |
 |---|---|---|
-| `riw-health-check` | Scans the books for duplicates, one-sided transfers, category drift, and sales tax errors, grades what it finds, and fixes approved items. The scan itself is read-only | **On approval** |
+| `riw-bookkeeping-debugger` | Debugs the books: scans for duplicates, one-sided transfers, category drift, and sales tax errors, grades what it finds, and fixes approved items. The scan itself is read-only | **On approval** |
 | `riw-monday-brief` | One page for Monday morning: cash position, last week's sales and spending, invoices waiting to be paid, and the three things worth doing this week | No |
 | `riw-cash-flow-forecast` | 30, 60 and 90 day cash outlook from open invoices, recurring costs, and known tax dates. Names the low point, which is what answers "can I make payroll" | No |
 | `riw-financing-package` | The short package a lender asks for: twelve months of income and expenses, a balance sheet, cash position, and receivables, labelled management-prepared and ready to attach to an application | No |
@@ -26,7 +26,7 @@ These skills read and write your books through the **ReInvestWealth accounting M
 
 Without the MCP server connected, a skill will load and then tell you it has no data to work with.
 
-The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-health-check`, `riw-migrate-history`, and `riw-ar-ap-recon` being Canada specific.
+The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-bookkeeping-debugger`, `riw-migrate-history`, and `riw-ar-ap-recon` being Canada specific.
 
 ## Install
 
@@ -55,7 +55,7 @@ Copy any skill directory into `~/.claude/skills/` for personal use, or your proj
 
 ## A word about the ones that write
 
-`riw-health-check`, `riw-migrate-history`, and `riw-ar-ap-recon` post entries into real bookkeeping data, and ReInvestWealth deliberately protects the audit trail: a posted transaction cannot be deleted, and its amount and date cannot be changed after it is created. Corrections mean voiding and reposting, permanently visible.
+`riw-bookkeeping-debugger`, `riw-migrate-history`, and `riw-ar-ap-recon` post entries into real bookkeeping data, and ReInvestWealth deliberately protects the audit trail: a posted transaction cannot be deleted, and its amount and date cannot be changed after it is created. Corrections mean voiding and reposting, permanently visible.
 
 All three are written around that. They plan everything first, assert their own tie-outs, show you a full review table, and wait for your explicit approval before they write anything. **Do not shortcut that gate**, and read the skill before you run it on a client.
 

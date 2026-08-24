@@ -10,7 +10,7 @@
       "name": "reinvestwealth-accounting",
       "source": "./plugins/reinvestwealth-accounting",
       "displayName": "ReInvestWealth Accounting Skills",
-      "description": "Books health check, weekly brief, cash-flow forecast, financing package, year-end financials, monthly client review, AR and AP reconciliation, and history migration skills for books kept in ReInvestWealth.",
+      "description": "Bookkeeping debugger, weekly brief, cash-flow forecast, financing package, year-end financials, monthly client review, AR and AP reconciliation, and history migration skills for books kept in ReInvestWealth.",
       "version": "0.2.0",
       "author": {
         "name": "ReInvestWealth",

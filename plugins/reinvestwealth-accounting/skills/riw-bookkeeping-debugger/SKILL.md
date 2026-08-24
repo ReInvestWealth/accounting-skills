@@ -1,6 +1,6 @@
 ---
-name: "riw-health-check"
-description: "Run a health check on books kept in ReInvestWealth: scan for duplicate transactions, one-sided transfers, category drift, direction anomalies, stale categories, and sales tax errors, then grade the books and report what it found. Optionally fixes approved items by recategorizing rows, pairing transfer legs, or voiding confirmed duplicates. The scan itself is read-only; nothing is changed without an explicit approval. Use when someone asks to check the books, find mistakes or errors, clean up or tidy the books, fix miscategorized transactions, hunt duplicates, review sales tax coding, or make sure the books are right before a filing, a year end, or a decision."
+name: "riw-bookkeeping-debugger"
+description: "Debug books kept in ReInvestWealth: scan for duplicate transactions, one-sided transfers, category drift, direction anomalies, stale categories, and sales tax errors, then grade the books and report what it found. Optionally fixes approved items by recategorizing rows, pairing transfer legs, or voiding confirmed duplicates. The scan itself is read-only; nothing is changed without an explicit approval. Use when someone asks to debug the books, run a health check, find mistakes or errors, clean up or tidy the books, fix miscategorized transactions, hunt duplicates, review sales tax coding, or make sure the books are right before a filing, a year end, or a decision."
 license: "MIT"
 compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant. The scan is read-only; applying fixes needs write access and WRITES TO PRODUCTION BOOKKEEPING DATA. Built for owners as well as accountants and bookkeepers. Sales tax checks are Canada specific; everything else applies in Canada and the United States."
 metadata:
@@ -11,11 +11,11 @@ metadata:
   risk: medium
 ---
 
-# Books Health Check
+# Bookkeeping Debugger
 
-You are checking a set of books for the mistakes that skew the numbers people actually use: duplicates that inflate expenses, one-sided transfers that distort profit, category drift that makes statements lie, and sales tax coded wrong ahead of a filing. Two halves, one skill:
+You are debugging a set of books: finding the mistakes that skew the numbers people actually use, and fixing the ones a human approves. Duplicates inflate expenses, one-sided transfers distort profit, category drift makes statements lie, and sales tax coded wrong surfaces at filing time. Two halves, one skill:
 
-1. **Diagnose.** Read everything in scope, run every check in code, and hand back a graded health report. This half changes nothing and is always safe to run.
+1. **Diagnose.** Read everything in scope, run every check in code, and hand back a graded diagnostic report. This half changes nothing and is always safe to run.
 2. **Fix**, only if asked and only after approval. Build a fix list, show every proposed change, wait for explicit approval, apply, and verify from live data.
 
 A plain "check my books" request means half one. Do not treat it as permission for half two.
@@ -105,7 +105,7 @@ Possible personal or mixed-use spending, unusual spikes against the account's ow
 1. **Scope.** Confirm the business, the period, and whether any part of it is filed or locked. Default to the current fiscal year when the user does not say.
 2. **Read.** Fetch the chart of accounts fresh, the sales-tax rate data, and every transaction in scope, including voided rows so voids are not re-proposed.
 3. **Detect.** Run every check in code. Every number in a finding comes from computation, not from eyeballing rows.
-4. **Report.** Deliver the health report (format below). If the user only asked for a check, **stop here.**
+4. **Report.** Deliver the diagnostic report (format below). If the user only asked for a check, **stop here.**
 5. **Build the fix list**, when fixes are wanted: one row per proposed change with the transaction, the issue, current versus proposed category and tax, the tier, and the evidence. Ask-tier items go in a batched question round first; their answers turn into fix rows or get dropped.
 6. **Review and approve.** Blocking, per the protocol above.
 7. **Apply.** Recategorizations in batches; each void and each transfer pair as an atomic unit. Name every new entry with an uppercase prefix identifying this cleanup and a one-sentence note saying why it exists.
@@ -113,7 +113,7 @@ Possible personal or mixed-use spending, unusual spikes against the account's ow
 
 ---
 
-## The health report
+## The diagnostic report
 
 One page, written for the owner even when an accountant runs it:
 
