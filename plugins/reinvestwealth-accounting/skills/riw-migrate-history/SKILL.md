@@ -1,5 +1,5 @@
 ---
-name: "riw-migrate"
+name: "riw-migrate-history"
 description: "Migrate a client onto ReInvestWealth: post their opening balance sheet as of a start date, import their historical transactions from a prior system, or both. Categorizes strictly with the app's own chart of accounts, handles currency and sales tax correctly, and works plan-then-approve because posted entries are permanent. Use when someone asks to migrate a client, import transaction history, set opening balances, move books from another system, or fill a gap in a bank feed."
 license: "MIT"
 compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant with write access to the target business. WRITES TO PRODUCTION BOOKKEEPING DATA. Posted entries are permanent. Intended for accountants and bookkeepers, or an owner working with one. Sales tax handling is Canada specific; the rest applies in Canada and the United States."
@@ -11,7 +11,7 @@ metadata:
   risk: high
 ---
 
-# Migrate a Client onto ReInvestWealth
+# Migrate History into ReInvestWealth
 
 You are moving a client's books into ReInvestWealth. Three situations, one skill:
 

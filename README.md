@@ -10,6 +10,7 @@ MIT licensed. Fork them, change them, use them on your own clients.
 
 | Skill | What it does | Writes to your books |
 |---|---|---|
+| `riw-health-check` | Scans the books for duplicates, one-sided transfers, category drift, and sales tax errors, grades what it finds, and fixes approved items. The scan itself is read-only | **On approval** |
 | `riw-monday-brief` | One page for Monday morning: cash position, last week's sales and spending, invoices waiting to be paid, and the three things worth doing this week | No |
 | `riw-cash-flow-forecast` | 30, 60 and 90 day cash outlook from open invoices, recurring costs, and known tax dates. Names the low point, which is what answers "can I make payroll" | No |
 | `riw-financing-package` | The short package a lender asks for: twelve months of income and expenses, a balance sheet, cash position, and receivables, labelled management-prepared and ready to attach to an application | No |
@@ -17,7 +18,7 @@ MIT licensed. Fork them, change them, use them on your own clients.
 | `riw-prepare-financials-us` | US year-end: Income Statement and Balance Sheet on the income tax basis, depreciation schedule, working papers, and a return mapping file for the 1120 or 1120-S preparer | No |
 | `riw-monthly-review-email` | The monthly client review: a short three-page report plus a draft email, for a bookkeeper to send instead of the monthly call | No |
 | `riw-ar-ap-recon` | Accrual AR and AP for cash-basis books: accrues open invoices and bills, ages them in a workbook the accountant reviews, matches the payments that settle them, and books the entries. Plan, review, approve, apply | **Yes** |
-| `riw-migrate` | Move a client onto ReInvestWealth: opening balances, historical transactions, or both. Plan, review, approve, apply | **Yes** |
+| `riw-migrate-history` | Move a client's history into ReInvestWealth: opening balances, historical transactions, or both. Plan, review, approve, apply | **Yes** |
 
 ## What you need
 
@@ -25,7 +26,7 @@ These skills read and write your books through the **ReInvestWealth accounting M
 
 Without the MCP server connected, a skill will load and then tell you it has no data to work with.
 
-The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-migrate` and `riw-ar-ap-recon` being Canada specific.
+The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-health-check`, `riw-migrate-history`, and `riw-ar-ap-recon` being Canada specific.
 
 ## Install
 
@@ -54,16 +55,16 @@ Copy any skill directory into `~/.claude/skills/` for personal use, or your proj
 
 ## A word about the ones that write
 
-`riw-migrate` and `riw-ar-ap-recon` post entries into real bookkeeping data, and ReInvestWealth deliberately protects the audit trail: a posted transaction cannot be deleted, and its amount and date cannot be changed after it is created. Corrections mean voiding and reposting, permanently visible.
+`riw-health-check`, `riw-migrate-history`, and `riw-ar-ap-recon` post entries into real bookkeeping data, and ReInvestWealth deliberately protects the audit trail: a posted transaction cannot be deleted, and its amount and date cannot be changed after it is created. Corrections mean voiding and reposting, permanently visible.
 
-Both skills are written around that. They plan everything first, assert their own tie-outs, show you a full review table, and wait for your explicit approval before they write anything. **Do not shortcut that gate**, and read the skill before you run it on a client.
+All three are written around that. They plan everything first, assert their own tie-outs, show you a full review table, and wait for your explicit approval before they write anything. **Do not shortcut that gate**, and read the skill before you run it on a client.
 
 ## What these are, and what they are not
 
 These skills are written procedures, not a service. Running one does not create an accounting, bookkeeping, or tax engagement with ReInvestWealth, and nothing they produce is accounting, tax, or financial advice.
 
 - **Output is review-ready, not file-ready.** `riw-prepare-financials-ca` produces statements on a compilation basis for a CPA to review. It does not file anything, and it does not replace professional judgment.
-- **You are responsible for what gets posted.** `riw-migrate` and `riw-ar-ap-recon` write to real bookkeeping data, and posted entries are permanent by design. Read the review table before you approve it.
+- **You are responsible for what gets posted.** The skills that write do so into real bookkeeping data, and posted entries are permanent by design. Read the review table before you approve it.
 - **An assistant can be confidently wrong.** Every skill here is written to show its assumptions and its tie-outs for exactly that reason. Check them.
 
 The software is provided as is, without warranty of any kind, as set out in [LICENSE](LICENSE).
