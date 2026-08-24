@@ -1,6 +1,6 @@
 ---
 name: "riw-cash-flow-forecast"
-description: "Build a 30, 60, and 90 day cash-flow outlook for a business whose books are in ReInvestWealth, from open invoices, recurring costs detected in transaction history, and known tax due dates. Names the low point and warns weeks early about a cash crunch. Use when someone asks about runway, whether they can make payroll, whether they can afford something, or wants a cash-flow forecast or projection."
+description: "Build a cash-flow outlook for a business whose books are in ReInvestWealth, at one of three horizons: 90 days week by week, one year month by month, or two years month by month. Built from open invoices, recurring costs detected in transaction history, and known tax due dates. Names the low point and warns weeks early about a cash crunch. Use when someone asks about runway, whether they can make payroll, whether they can afford something or hire, or wants a cash-flow forecast or projection at any horizon."
 license: "MIT"
 compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant, with access to at least one business, and ideally 6 or more months of transaction history. Read only, no writes. Works for Canadian and United States businesses."
 metadata:
@@ -12,11 +12,21 @@ metadata:
 
 # Cash Flow Forecast
 
-You are answering one question: **is there a week in the next 90 days where this business runs out of money.** Everything else on the page supports that answer.
+You are answering one question: **is there a point on the horizon where this business runs out of money.** Everything else on the page supports that answer.
 
-The output is not a ledger and not a budget. It is a week-by-week cash path with a named low point, the assumptions that produced it, and how wrong it could be.
+The output is not a ledger and not a budget. It is a cash path with a named low point, the assumptions that produced it, and how wrong it could be.
 
 **Read only.** This skill never changes the books.
+
+## Three horizons, pick one
+
+| Horizon | Buckets | What it is for |
+|---|---|---|
+| **90 days** | Weekly | The default. "Can I make payroll", the next quarter, a crunch coming in weeks |
+| **One year** | Monthly | Planning a hire, an annual commitment, seasonality across a full cycle |
+| **Two years** | Monthly | A loan horizon, a lease, long-range scenario planning |
+
+Default to 90 days unless the user asks for further out. The two long horizons are the same machinery with the honesty rules turned up: open invoices only inform roughly the first 90 days, so everything beyond that rides on the run rate, recurring costs, and seasonality, and the page must say so. Confidence declines with distance; the two-year view is scenario planning, not a prediction, and gets labelled that way.
 
 ---
 
@@ -98,17 +108,19 @@ Watch for:
 
 **Known tax obligations with hard dates.** In Canada, pending sales tax returns come with due dates and amounts, which are the most reliable outflows in the whole forecast: use them. Income tax instalments too, where the user can tell you the schedule. In the United States, ask the user for their estimated payment schedule rather than inferring one.
 
-**One-offs the user knows about.** Ask once: anything large and unusual in the next 90 days, either direction. A planned equipment purchase or a tax refund changes the answer completely and is not in the history.
+**One-offs the user knows about.** Ask once: anything large and unusual inside the horizon, either direction. A planned equipment purchase or a tax refund changes the answer completely and is not in the history.
 
 ## Phase 4: Build the path
 
-Walk **week by week** for 90 days. Monthly buckets hide the trough, which is the entire point of the exercise, so weekly is the default. Offer monthly as a summary on top, never instead.
+**On the 90 day horizon, walk week by week.** Monthly buckets hide the trough, which is the entire point of the exercise, so weekly is mandatory here. Offer monthly as a summary on top, never instead.
 
-For each week: opening cash, inflows, outflows, closing cash. Then:
+**On the one and two year horizons, walk month by month**, with the first 90 days still computed weekly underneath so a near-term trough is never smoothed away by its month: if the weekly path dips where the monthly path does not, report the weekly trough as the low point. Beyond the invoice window, inflows come from the run rate with seasonality applied only where at least a full year of history supports it; recurring costs and known annual renewals carry forward at their most recent amounts. Print that boundary on the page: where the invoice-backed path ends and the run-rate path begins.
 
-- **The low point:** its week, its date range, and its balance.
-- **The 30, 60, and 90 day marks**, since that is what the user asked for.
-- **The slow-collections scenario:** same outflows, inflows pushed later by a stated amount (for example every invoice paid two weeks later than the base case). Report its low point too.
+For each bucket: opening cash, inflows, outflows, closing cash. Then:
+
+- **The low point:** its week or month, its date range, and its balance.
+- **The horizon marks:** 30, 60, and 90 days on the short view; each quarter end on the long views.
+- **The slow-collections scenario:** same outflows, inflows pushed later by a stated amount (for example every invoice paid two weeks later than the base case). Report its low point too. On the long horizons, pair it with a soft-revenue case instead (run rate down by a stated percentage), which is the risk that actually dominates past 90 days.
 
 Then judge it, in plain language:
 
@@ -124,11 +136,12 @@ State it, with the reason:
 - **How much of the inflow depends on one customer.** If a single invoice is most of the expected inflow, the forecast is really a bet on that one customer, and the reader must know that.
 - **Coverage:** are all the business's accounts connected. An unconnected account means the starting cash is wrong.
 - **Backlog:** a large uncategorized pile means the run rate is provisional.
-- **Seasonality you could not measure.** With less than a year of data you cannot see it. Say so rather than implying the pattern holds.
+- **Seasonality you could not measure.** With less than a year of data you cannot see it. Say so rather than implying the pattern holds. On the one and two year horizons this is a hard gate: without a full year of history, the long path carries no seasonal shape and the page says the flat run rate is an assumption, not a finding.
+- **Distance.** On the long horizons, say plainly that month 18 is an extrapolation of today's run rate, not a prediction. Two years out, the honest claim is "at the current shape of the business", and the page should read that way.
 
 ## Phase 6: Deliver
 
-Lead with the answer in one or two sentences, then the weekly table, then the assumptions, then confidence. Markdown by default; offer a PDF.
+Lead with the answer in one or two sentences, then the weekly or monthly table, then the assumptions, then confidence. Markdown by default; offer a PDF.
 
 If the forecast shows a crunch, close with the levers visible **in their own numbers**, not generic advice: the invoices that would fix it if collected, the recurring costs large enough to matter, the timing of the largest outflow. Present them as facts about their data, and leave the decision with them and their CPA.
 
@@ -137,7 +150,8 @@ If the forecast shows a crunch, close with the levers visible **in their own num
 ## Traps
 
 - **Leading with the ending balance.** Hides the trough. Lead with the low point.
-- **Monthly buckets.** A month is long enough to hide a two-week hole.
+- **Monthly buckets on the 90 day view.** A month is long enough to hide a two-week hole. On the long views, keep the first 90 days weekly underneath.
+- **Presenting month 18 with the same confidence as week 3.** Confidence declines with distance and the page has to show it.
 - **Assuming due dates hold.** Use the customer's actual payment history when you have it.
 - **Counting draft invoices as inflows.** They have not been sent.
 - **Averaging a drifting subscription price.** Use the latest amount.

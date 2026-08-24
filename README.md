@@ -12,7 +12,8 @@ MIT licensed. Fork them, change them, use them on your own clients.
 |---|---|---|
 | `riw-bookkeeping-debugger` | Debugs the books: scans for duplicates, one-sided transfers, category drift, and sales tax errors, grades what it finds, and fixes approved items. The scan itself is read-only | **On approval** |
 | `riw-monday-brief` | One page for Monday morning: cash position, last week's sales and spending, invoices waiting to be paid, and the three things worth doing this week | No |
-| `riw-cash-flow-forecast` | 30, 60 and 90 day cash outlook from open invoices, recurring costs, and known tax dates. Names the low point, which is what answers "can I make payroll" | No |
+| `riw-monthly-health-check` | The owner's month in review: the month against the months before it, cash and runway, receivables, what changed in spending, and whether the books are clean enough to trust. One page, graded | No |
+| `riw-cash-flow-forecast` | Cash outlook at three horizons: 90 days week by week, or one or two years month by month, from open invoices, recurring costs, and known tax dates. Names the low point, which is what answers "can I make payroll" | No |
 | `riw-financing-package` | The short package a lender asks for: twelve months of income and expenses, a balance sheet, cash position, and receivables, labelled management-prepared and ready to attach to an application | No |
 | `riw-prepare-financials-ca` | Canadian year-end: Income Statement and Balance Sheet mapped to GIFI, CCA schedule, working papers, and a GIFI import file for the T2 preparer | No |
 | `riw-prepare-financials-us` | US year-end: Income Statement and Balance Sheet on the income tax basis, depreciation schedule, working papers, and a return mapping file for the 1120 or 1120-S preparer | No |
