@@ -14,7 +14,7 @@ metadata:
 
 You are giving an owner the month, on one page: did the business make money, is cash getting better or worse, who owes you, what changed, and what deserves attention next month. It is the owner's own review, not a client deliverable; the bookkeeper-to-client version of this job is `riw-monthly-review-email`.
 
-**Read only.** This skill never changes the books. Where it finds the books themselves in doubt, it says so and points at `riw-bookkeeping-debugger` rather than fixing anything.
+**Read only.** This skill never changes the books. Where it finds the books themselves in doubt, it says so and points at `riw-catch-and-correct` rather than fixing anything.
 
 ---
 
@@ -57,7 +57,7 @@ One page, in this order, each section graded clean, watch, or attention:
 4. **Receivables.** Total open, how much is past due, the oldest and the largest, by name. If collections are the month's real story, say so in the headline.
 5. **Obligations (Canada).** Sales tax collected in the month, and any pending return with its due date and amount, so the cash position reads correctly: money set aside for the CRA is not spending money.
 6. **What changed.** New recurring charges that appeared this month, recurring charges that stopped, and any category spending well outside its trailing average. This is where forgotten subscriptions and quiet price increases surface.
-7. **Books hygiene.** Counts of uncategorized rows and dumping-ground balances (other expense, other revenue) for the month. Beyond a handful, the grade is watch at best, the report says the month's figures are provisional to that extent, and the fix is a `riw-bookkeeping-debugger` run, not edits from here.
+7. **Books hygiene.** Counts of uncategorized rows and dumping-ground balances (other expense, other revenue) for the month. Beyond a handful, the grade is watch at best, the report says the month's figures are provisional to that extent, and the fix is a `riw-catch-and-correct` run, not edits from here.
 8. **Three things for next month.** Drawn from their own numbers: the invoice worth chasing, the subscription worth questioning, the filing date coming. Facts from their data, not generic advice, and never more than three.
 
 Close with what was not checked and why, so a clean page is not read as broader than it is.
@@ -76,7 +76,7 @@ Built to run in the first days of a new month, on the month just closed. If aske
 - **Publishing revenue with tax still in it.** Net of sales tax, proven, stated.
 - **Setting the burn rate off a single month.** Use the trailing average and name it.
 - **Calling three data points a trend and one December a season.** State the history behind every pattern claim.
-- **Fixing the books from here.** Hygiene findings hand off to `riw-bookkeeping-debugger`.
+- **Fixing the books from here.** Hygiene findings hand off to `riw-catch-and-correct`.
 - **Drafting a client email.** That is `riw-monthly-review-email`; this page is for the owner.
 - **Reading "no bills list" as "nothing owed".** There is no AP subledger; scope it out loud.
 - **Burying the red flag.** If the month has one, it is the headline.

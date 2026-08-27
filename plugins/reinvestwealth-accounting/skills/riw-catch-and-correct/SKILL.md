@@ -1,22 +1,22 @@
 ---
-name: "riw-bookkeeping-debugger"
-description: "Debug books kept in ReInvestWealth: scan for duplicate transactions, one-sided transfers, category drift, direction anomalies, stale categories, and sales tax errors, then grade the books and report what it found. Optionally fixes approved items by recategorizing rows, pairing transfer legs, or voiding confirmed duplicates. The scan itself is read-only; nothing is changed without an explicit approval. Use when someone asks to debug the books, check the books, find mistakes or errors, clean up or tidy the books, fix miscategorized transactions, hunt duplicates, review sales tax coding, or make sure the books are right before a filing, a year end, or a decision. For a business-level month in review, use riw-monthly-health-check instead."
+name: "riw-catch-and-correct"
+description: "Catch and correct bookkeeping errors in ReInvestWealth: scan for duplicate transactions, one-sided or miscoded transfers, misfiled refunds, owner and shareholder movements, loan payments in the wrong category, cross-currency and FX discrepancies, category drift, direction anomalies, stale categories, and sales tax errors, then grade the books and report what it found. When email, file storage, or calendar connections are available, it hunts receipts and confirmations to settle ambiguous findings. Optionally fixes approved items by recategorizing rows, pairing transfer legs, or voiding confirmed duplicates. The scan itself is read-only; nothing is changed without an explicit approval. Use when someone asks to catch and correct errors, check the books, find mistakes, clean up or tidy the books, fix miscategorized transactions, hunt duplicates, review sales tax coding, or make sure the books are right before a filing, a year end, or a decision. For a business-level month in review, use riw-monthly-health-check instead."
 license: "MIT"
-compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant. The scan is read-only; applying fixes needs write access and WRITES TO PRODUCTION BOOKKEEPING DATA. Built for owners as well as accountants and bookkeepers. Sales tax checks are Canada specific; everything else applies in Canada and the United States."
+compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant. Also uses, read-only and only when present, other connected sources (email, file storage, calendar) to corroborate findings; none are required. The scan is read-only; applying fixes needs write access and WRITES TO PRODUCTION BOOKKEEPING DATA. Built for owners as well as accountants and bookkeepers. Sales tax checks are Canada specific; everything else applies in Canada and the United States."
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.1.0
+  version: 0.2.0
   writes: transactions
   risk: medium
 ---
 
-# Bookkeeping Debugger
+# Catch & Correct
 
-You are debugging a set of books: finding the mistakes that skew the numbers people actually use, and fixing the ones a human approves. Duplicates inflate expenses, one-sided transfers distort profit, category drift makes statements lie, and sales tax coded wrong surfaces at filing time. Two halves, one skill:
+You are catching the mistakes that skew the numbers people actually use, and correcting the ones a human approves. Duplicates inflate expenses, one-sided transfers distort profit, category drift makes statements lie, and sales tax coded wrong surfaces at filing time. Two halves, one skill:
 
-1. **Diagnose.** Read everything in scope, run every check in code, and hand back a graded diagnostic report. This half changes nothing and is always safe to run.
-2. **Fix**, only if asked and only after approval. Build a fix list, show every proposed change, wait for explicit approval, apply, and verify from live data.
+1. **Catch.** Read everything in scope, run every check in code, and hand back a graded diagnostic report. This half changes nothing and is always safe to run.
+2. **Correct**, only if asked and only after approval. Build a fix list, show every proposed change, wait for explicit approval, apply, and verify from live data.
 
 A plain "check my books" request means half one. Do not treat it as permission for half two.
 
@@ -24,9 +24,9 @@ A plain "check my books" request means half one. Do not treat it as permission f
 
 ## Read this before you touch anything
 
-The scan is read-only. **The fix pass writes to production bookkeeping data**, and the app protects the audit trail: a posted transaction cannot be deleted (a removal is a void, and the record stays), and its amount and date cannot be changed after it is created. **Confirm the exact correction path available to you before applying anything**, then work as though every write is permanent.
+The scan is read-only. **The correct pass writes to production bookkeeping data**, and the app protects the audit trail: a posted transaction cannot be deleted (a removal is a void, and the record stays), and its amount and date cannot be changed after it is created. **Confirm the exact correction path available to you before applying anything**, then work as though every write is permanent.
 
-So the fix pass follows the same protocol as every writing skill here:
+So the correct pass follows the same protocol as every writing skill here:
 
 1. **Plan.** Build every proposed fix. Assert the math in code. Change nothing.
 2. **Review.** Show the full fix list, one row per change, to a human.
@@ -34,7 +34,7 @@ So the fix pass follows the same protocol as every writing skill here:
 4. **Apply.** In batches; voids and transfer pairs as atomic units.
 5. **Verify.** Re-read from the app, re-run the affected checks, and show the before and after.
 
-**Never guess.** A finding you cannot support with evidence from the books is a question for the human, not a fix. A plausible guess posted into a client's books is worse than a delay.
+**Never guess.** A finding you cannot support with evidence from the books or a document is a question for the human, not a fix. A plausible guess posted into a client's books is worse than a delay.
 
 **Never touch a filed or locked period** without explicit instruction from whoever is responsible for that filing. Findings inside one still belong in the report; their fixes get flagged as blocked, not applied.
 
@@ -71,12 +71,15 @@ Sum every interfund-transfer leg and pair each to its other side. Same-currency 
 - **A credit card payment recorded as an expense** on either leg, which double-counts spending that the card rows already carry. Fix: interfund on both legs.
 - **Sales tax on an interfund row.** Transfer legs are always untaxed. Fix: recategorize with the tax removed.
 
-A cross-currency pair that does not net to zero can be real bank FX rather than an error; judge it as a pair and tier it Ask.
+A cross-currency pair that does not net to zero can be real bank FX, the spread on a currency conversion, or a genuine FX gain or loss rather than an error; judge it as a pair and tier it Ask.
 
 ### 3. Categorization
 
 - **Merchant drift.** The same merchant scattered across several categories with no consistent precedent. Where the books show a clear precedent, tier Fix with the precedent as evidence; where they do not, tier Ask with the options listed.
 - **Dumping grounds.** Rows sitting in other expense or other revenue beyond a handful, which usually marks low-confidence imports nobody revisited. Tier Ask, batched into one mapping table.
+- **Misfiled refunds.** Money in from a merchant the books otherwise pay, sitting in a revenue category, is usually a refund that belongs back in the expense category it reverses. With the original charge found, tier Fix with that pair as evidence; without it, tier Ask.
+- **Owner and shareholder movements.** Money moving to or from the owner coded as ordinary revenue or expense when the chart carries shareholder categories (such as due to shareholder). Tier Ask, always: whether a row was a draw, a contribution, or a reimbursement is the owner's call, consistent with check 6.
+- **Loan payments.** Repayment rows sitting in an ordinary expense category. The four moves above do not include splitting a row, so anything that would need a principal-and-interest split is a question; tier Ask with the chart's actual options listed.
 - **Direction anomalies.** Revenue categories on money-out rows and expense categories on money-in rows, excluding matched refund pairs (same counterparty, opposite direction, close in time). Tier Ask: the amount and date are immutable, so if the direction is genuinely wrong the row came in wrong and needs a human decision, not a recategorization.
 - **Stale categories.** Rows whose category no longer matches the fresh chart of accounts. Tier Fix, mapped to the current chart.
 
@@ -100,16 +103,30 @@ Possible personal or mixed-use spending, unusual spikes against the account's ow
 
 ---
 
+## Evidence beyond the books
+
+The books are not the only place evidence lives. At the start of a run, take stock of what else is connected besides the accounting server: email (Gmail, Outlook), file storage (Google Drive, Dropbox), a calendar, anything searchable for receipts, invoices, statements, order confirmations, or loan schedules. Tell the user what you found and what you will draw on.
+
+Use those sources to settle findings, never to browse. For an Ask-tier finding, run targeted searches built from the row itself (merchant name, amount, a date window around the transaction) before putting the question to the human:
+
+- **A receipt, invoice, or confirmation that pins down what a row was is real evidence.** Attach it to the finding, cite the source (message or file name, date, sender), and let it move the finding: a decisive document can turn an Ask into a Fix; a partial one sharpens the question the human gets.
+- **A calendar corroborates context**, such as travel dates behind a cluster of foreign-currency charges. It corroborates; it never decides a categorization by itself.
+- **These connections are read-only in this skill, without exception.** Search and read; never send, edit, move, or delete anything in them.
+- **Nothing found, or nothing connected, changes nothing about the protocol.** The finding stays an Ask, and the report says outside evidence was unavailable rather than implying it was checked and came up clean.
+
+---
+
 ## Phases
 
-1. **Scope.** Confirm the business, the period, and whether any part of it is filed or locked. Default to the current fiscal year when the user does not say.
+1. **Scope.** Confirm the business, the period, and whether any part of it is filed or locked. Note which outside evidence sources are connected. Default to the current fiscal year when the user does not say.
 2. **Read.** Fetch the chart of accounts fresh, the sales-tax rate data, and every transaction in scope, including voided rows so voids are not re-proposed.
 3. **Detect.** Run every check in code. Every number in a finding comes from computation, not from eyeballing rows.
-4. **Report.** Deliver the diagnostic report (format below). If the user only asked for a check, **stop here.**
-5. **Build the fix list**, when fixes are wanted: one row per proposed change with the transaction, the issue, current versus proposed category and tax, the tier, and the evidence. Ask-tier items go in a batched question round first; their answers turn into fix rows or get dropped.
-6. **Review and approve.** Blocking, per the protocol above.
-7. **Apply.** Recategorizations in batches; each void and each transfer pair as an atomic unit. Name every new entry with an uppercase prefix identifying this cleanup and a one-sentence note saying why it exists.
-8. **Verify.** Re-read from live data, re-run the checks the fixes touched, and show the grade moving. Any fix that did not land as planned gets reported, never papered over.
+4. **Corroborate.** For Ask-tier findings, search whatever outside sources are connected (per Evidence beyond the books) and attach what turns up. Retier only what the evidence genuinely decides.
+5. **Report.** Deliver the diagnostic report (format below). If the user only asked for a check, **stop here.**
+6. **Build the fix list**, when fixes are wanted: one row per proposed change with the transaction, the issue, current versus proposed category and tax, the tier, and the evidence. Ask-tier items go in a batched question round first; their answers turn into fix rows or get dropped.
+7. **Review and approve.** Blocking, per the protocol above.
+8. **Apply.** Recategorizations in batches; each void and each transfer pair as an atomic unit. Name every new entry with an uppercase prefix identifying this cleanup and a one-sentence note saying why it exists.
+9. **Verify.** Re-read from live data, re-run the checks the fixes touched, and show the grade moving. Any fix that did not land as planned gets reported, never papered over.
 
 ---
 
@@ -120,7 +137,7 @@ One page, written for the owner even when an accountant runs it:
 - **A grade per check group** (clean, review, or issues), with the count of findings behind it.
 - **What it costs.** Where computable, the money at stake: the sum of duplicate suspects, the profit distortion from lone transfer legs, the tax over- or under-claimed. Skip the line where it is not computable; never estimate.
 - **The findings tables**, grouped by tier: what is mechanically fixable on approval, what needs an answer, and what is flagged for judgment.
-- **What was not checked**: balances without statements, locked periods, and any check skipped for scope, said plainly so a clean grade is not read as broader than it is.
+- **What was not checked**: balances without statements, locked periods, any check skipped for scope, and whether outside evidence sources were searched or unavailable, said plainly so a clean grade is not read as broader than it is.
 
 ---
 
@@ -134,5 +151,7 @@ One page, written for the owner even when an accountant runs it:
 - **Validating tax against a remembered rate.** Rates come from the app's rate data, every time.
 - **Introducing sales tax on US books.** The tax checks are Canada only.
 - **Deciding what was personal.** Flag it; the owner decides.
+- **Browsing connected email or files.** Outside sources get targeted searches built from a finding, nothing wider.
+- **Writing anywhere but the books.** Email, drive, and calendar connections are read-only here.
 - **Applying into a filed or locked period.** Blocked findings stay findings.
 - **Reporting unverified balances as clean.** No statement, no tie-out, say so.
