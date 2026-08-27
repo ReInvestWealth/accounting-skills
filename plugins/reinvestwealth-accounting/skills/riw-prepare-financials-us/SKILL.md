@@ -1,19 +1,19 @@
 ---
 name: "riw-prepare-financials-us"
-description: "Prepare a US corporation's year-end financial statements from books kept in ReInvestWealth: Income Statement and Balance Sheet on the income tax basis of accounting, a tax depreciation schedule, working papers, and a return mapping file for the Form 1120 or 1120-S preparer, all prepared for CPA review with a complete audit trail. Use when someone asks for year-end financials, financial statements, tax-basis statements, or an 1120 or 1120-S preparation package for a US corporation."
+description: "Prepare a US corporation's year-end financial statements from books kept in ReInvestWealth: Income Statement and Balance Sheet on the income tax basis of accounting, a tax depreciation schedule, working papers, and a return mapping file for the Form 1120 or 1120-S preparer, all prepared for CPA review with a complete audit trail. As the final step, on its own approval, it posts the year-end adjusting entries (depreciation, accruals, reclasses, corrections) back into the books so the ledger carries the filed position forward. Use when someone asks for year-end financials, financial statements, tax-basis statements, or an 1120 or 1120-S preparation package for a US corporation."
 license: "MIT"
-compatibility: "For US corporations only (IRS, Form 1120 or 1120-S, including LLCs taxed as corporations). Needs the ReInvestWealth accounting MCP server connected to your assistant with access to the client's business, plus the client's prior-year federal return (with its depreciation schedule) and prior-year Balance Sheet as PDFs. Reads financial data; any correction to the books is a separate, separately approved change. Intended for use by or under the review of a CPA."
+compatibility: "US corporations only (IRS, Form 1120 or 1120-S, including LLCs taxed as corporations). Requires the ReInvestWealth accounting MCP server with access to the client's business, plus the prior-year federal return (with depreciation schedule) and prior-year Balance Sheet as PDFs. Read-only through the statement phases; the final phase posts approved year-end adjusting entries. WRITES TO PRODUCTION BOOKKEEPING DATA on approval; posted entries are permanent. For use by or under the review of a CPA."
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
   version: 0.1.0
   jurisdiction: US
-  writes: none
+  writes: transactions
 ---
 
 # Prepare Year-End Financials (US)
 
-You are preparing a corporation's current-year financial statements, Income Statement and Balance Sheet on the income tax basis of accounting, from three things: their **prior-year federal return** (Form 1120 or 1120-S, including its depreciation schedule), their **prior-year Balance Sheet**, and their **current-year general ledger** in ReInvestWealth. The output is a working spreadsheet with a complete audit trail, plus a one-sheet return mapping file for whoever files the 1120 or 1120-S.
+You are preparing a corporation's current-year financial statements, Income Statement and Balance Sheet on the income tax basis of accounting, from three things: their **prior-year federal return** (Form 1120 or 1120-S, including its depreciation schedule), their **prior-year Balance Sheet**, and their **current-year general ledger** in ReInvestWealth. The output is a working spreadsheet with a complete audit trail, plus a one-sheet return mapping file for whoever files the 1120 or 1120-S. The final step, once everything is approved, is posting the year-end adjustments back into the books (Phase 10).
 
 The clients are micro-entrepreneurs and very small corporations, typically 1 to 5 people: consultants, freelancers, real estate agents, healthcare professionals, newly incorporated founders. The statements they read must be **simple, condensed, and in plain language**, never a 40-line corporate income statement. Keep the face of the statements small while keeping the supporting detail and tie-outs fully intact underneath.
 
@@ -69,7 +69,7 @@ Workbook tabs, in order:
 
 Two layers, kept separate:
 
-**The face, what the owner reads.** The Income Statement uses the app's own categories, each as its own line. It stays readable because the app's category list is already short. The Balance Sheet stays deliberately condensed to the essential captions. Statement titles name the basis, for example "Balance Sheet — Income Tax Basis", and every page carries the no-assurance line.
+**The face, what the owner reads.** The Income Statement uses the app's own categories, each as its own line. It stays readable because the app's category list is already short. The Balance Sheet stays deliberately condensed to the essential captions. Statement titles name the basis, for example "Balance Sheet - Income Tax Basis", and every page carries the no-assurance line.
 
 **The detail, what the CPA and return preparer need.** The Return Map, Working Papers, and Trial Balance tabs. Every grouped caption breaks back out here into its component accounts and exact return captions. Nothing is lost for filing; it just does not clutter the face.
 
@@ -239,6 +239,33 @@ The standard: a CPA opening this cold can follow any number on the statements do
 2. Surface the Query Log items still open for client confirmation.
 3. Deliver **both** files.
 4. Remind the user in one line that this is a preparation engagement pending CPA review: no assurance, not audited, not tax advice, and the return preparer should confirm depreciation elections, reasonable compensation, distributions, and tax provisions, along with the book-to-tax reconciliation (Schedule M-1) and equity analysis (Schedule M-2), which are theirs to prepare.
+5. Offer Phase 10: posting the year-end adjustments into the books.
+
+## Phase 10: Post the adjustments to the books
+
+The engagement so far has left the app's ledger where Phase 3b found it: right on cash activity, but without the year-end entries. Closing the loop means posting the Phase 5 adjustments, the current-year depreciation, the accruals and prepaids, the reclasses (including any distribution reclass), and any approved corrections from Phase 4, into ReInvestWealth. This is what closes the gap Phase 3b describes: from here on the ledger's retained earnings and accumulated depreciation carry the filed position forward, and next year's engagement finds a ledger that ties to the return instead of running behind it.
+
+**This phase writes to production bookkeeping data, and it runs only on its own explicit approval.** The Phase 5 sign-off approved the adjustments as statement figures; posting them to the books is a separate decision. If the user declines, that is a fine outcome: note in the handover that the adjustments live only in the workbook, and next year's engagement will meet the Phase 3b gap again.
+
+**How the app takes an adjustment.** The app is a transaction-only ledger: every entry lives in a bank, card, or manual account, the category is the other side of the entry, and there are no journal entries. A posted transaction cannot be deleted (a removal is a void, and the record stays), and its amount and date cannot be changed after it is created. **Confirm the exact write path available to you before posting anything**, then work as though every write is permanent. Express each adjustment in the ledger's own terms:
+
+- **A reclass of an existing row is a recategorization** of that row, never a new entry.
+- **A confirmed duplicate is a void.**
+- **A non-cash adjustment, which is most of them (depreciation, an accrual, a prepaid deferral), is a pair of offsetting entries in a manual account netting to exactly zero cash:** one leg categorized to the expense or income line, the offsetting leg to the balance-sheet category. Post each pair as an atomic unit; a lone leg silently distorts profit.
+- Categories come from the app's chart of accounts, **fetched fresh in this phase.** Never invent one, and if the chart has no category for a leg (accumulated depreciation, an accrued liability), stop and ask; never park a leg in a lookalike category.
+
+Then follow the same protocol as every writing skill here:
+
+1. **Plan.** Build the posting list from the finalized adjusting entries, one row per entry: date (the last day of the fiscal year), account, name, category, amount, and its working-paper reference. Name each entry with the prefix `YEAR-END ADJ`, the working-paper reference, and the fiscal year, and put the one-line rationale from the working papers in the note. Any accrual a future payment must clear gets the clearing instruction in the note: the expected payment and the exact category it must receive, so the balance nets to zero instead of the payment being expensed a second time.
+2. **Review.** Show the full posting list to the user.
+3. **Approve.** Wait for explicit approval of that exact list. **Never apply in the same turn as you plan.** Any edit after approval means a new review and a new approval.
+4. **Apply.** In batches, each offsetting pair as an atomic unit.
+5. **Verify.** Re-pull the ledger, rebuild the trial balance, and confirm it now ties to the workbook's adjusted trial balance line by line. Record what was posted, with references, in the Working Papers tab.
+
+Two cautions:
+
+- **Post only figures that are final.** Depreciation here carries open elections: if the return preparer later takes Section 179 or bonus differently than the schedule proposed, the posted entries need a follow-up adjustment, never an edit. Say so in the handover, and where an election materially swings the figure, consider holding this phase until the preparer has decided.
+- **Never touch a filed or locked period** without explicit instruction from whoever is responsible for that filing.
 
 ---
 
@@ -254,5 +281,6 @@ The standard: a CPA opening this cold can follow any number on the statements do
 - **IRS, not CRA.** Form 1120 or 1120-S, Schedule L, Form 4562. No GIFI, no T2, no GST or HST.
 - **Prove your totals against the app's Profit and Loss** before using any figure, and remember the app does not manage US sales tax.
 - **Audit trail is mandatory.** No untraceable numbers.
+- **Writes happen only in Phase 10**, plan-then-approve, after the statements are finalized. Everything before it is read-only, and posted entries are permanent.
 - **Review-ready, not file-ready.** Output always carries the pending-CPA-review status and the no-assurance line.
 - **Keep client financials out of version control.**

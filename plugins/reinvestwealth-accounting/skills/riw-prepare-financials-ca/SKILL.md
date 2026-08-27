@@ -1,19 +1,19 @@
 ---
 name: "riw-prepare-financials-ca"
-description: "Prepare a Canadian corporation's year-end financial statements from books kept in ReInvestWealth: Income Statement and Balance Sheet mapped to GIFI codes, a CCA schedule, working papers, and a GIFI import file for the T2 preparer, all on a compilation engagement basis with a complete audit trail. Use when someone asks for year-end financials, financial statements, a compilation engagement, GIFI mapping, or a T2 preparation package."
+description: "Prepare a Canadian corporation's year-end financial statements from books kept in ReInvestWealth: Income Statement and Balance Sheet mapped to GIFI codes, a CCA schedule, working papers, and a GIFI import file for the T2 preparer, all on a compilation engagement basis with a complete audit trail. As the final step, on its own approval, it posts the year-end adjusting entries (CCA, accruals, reclasses, corrections) back into the books so the ledger carries the filed position forward. Use when someone asks for year-end financials, financial statements, a compilation engagement, GIFI mapping, or a T2 preparation package."
 license: "MIT"
-compatibility: "For Canadian corporations only (CRA, T2, GIFI, CCA). Needs the ReInvestWealth accounting MCP server connected to your assistant with access to the client's business, plus the client's prior-year T2 return and prior-year Balance Sheet as PDFs. Reads financial data; any correction to the books is a separate, separately approved change. Intended for use by or under the review of a CPA."
+compatibility: "For Canadian corporations only (CRA, T2, GIFI, CCA). Needs the ReInvestWealth accounting MCP server connected to your assistant with access to the client's business, plus the client's prior-year T2 return and prior-year Balance Sheet as PDFs. Read-only through the statement phases; the final phase posts the approved year-end adjusting entries to the books. WRITES TO PRODUCTION BOOKKEEPING DATA on approval, and posted entries are permanent. Intended for use by or under the review of a CPA."
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
   version: 0.1.0
   jurisdiction: CA
-  writes: none
+  writes: transactions
 ---
 
 # Prepare Year-End Financials (Canada)
 
-You are preparing a corporation's current-year financial statements, Income Statement and Balance Sheet mapped to GIFI codes, from three things: their **prior-year T2 return**, their **prior-year Balance Sheet**, and their **current-year general ledger** in ReInvestWealth. The output is a working spreadsheet with a complete audit trail, plus a one-sheet GIFI import file for whoever files the T2.
+You are preparing a corporation's current-year financial statements, Income Statement and Balance Sheet mapped to GIFI codes, from three things: their **prior-year T2 return**, their **prior-year Balance Sheet**, and their **current-year general ledger** in ReInvestWealth. The output is a working spreadsheet with a complete audit trail, plus a one-sheet GIFI import file for whoever files the T2. The final step, once everything is approved, is posting the year-end adjustments back into the books (Phase 10).
 
 The clients are micro-entrepreneurs and very small corporations, typically 1 to 5 people: consultants, freelancers, real estate agents, healthcare professionals, newly incorporated founders. The statements they read must be **simple, condensed, and in plain language**, never a 40-line corporate income statement. Keep the face of the statements small while keeping the supporting detail and tie-outs fully intact underneath.
 
@@ -237,6 +237,33 @@ The standard: a CPA opening this cold can follow any number on the statements do
 2. Surface the Query Log items still open for client confirmation.
 3. Deliver **both** files.
 4. Remind the user in one line that this is a compilation prepared for CPA review: not audited, not assurance, not tax advice, and the T2 preparer should confirm CCA, shareholder items, and tax provisions.
+5. Offer Phase 10: posting the year-end adjustments into the books.
+
+## Phase 10: Post the adjustments to the books
+
+The engagement so far has left the app's ledger where Phase 3b found it: right on cash activity, but without the year-end entries. Closing the loop means posting the Phase 5 adjustments, the current-year CCA, the accruals and prepaids, the reclasses, and any approved corrections from Phase 4, into ReInvestWealth. This is what closes the gap Phase 3b describes: from here on the ledger's retained earnings and accumulated amortization carry the filed position forward, and next year's engagement finds a ledger that ties to the T2 instead of running behind it.
+
+**This phase writes to production bookkeeping data, and it runs only on its own explicit approval.** The Phase 5 sign-off approved the adjustments as statement figures; posting them to the books is a separate decision. If the user declines, that is a fine outcome: note in the handover that the adjustments live only in the workbook, and next year's engagement will meet the Phase 3b gap again.
+
+**How the app takes an adjustment.** The app is a transaction-only ledger: every entry lives in a bank, card, or manual account, the category is the other side of the entry, and there are no journal entries. A posted transaction cannot be deleted (a removal is a void, and the record stays), and its amount and date cannot be changed after it is created. **Confirm the exact write path available to you before posting anything**, then work as though every write is permanent. Express each adjustment in the ledger's own terms:
+
+- **A reclass of an existing row is a recategorization** of that row, never a new entry. Sales tax rides on the row, so correct it at the same time.
+- **A confirmed duplicate is a void.**
+- **A non-cash adjustment, which is most of them (CCA, an accrual, a prepaid deferral), is a pair of offsetting entries in a manual account netting to exactly zero cash:** one leg categorized to the expense or income line, the offsetting leg to the balance-sheet category. Post each pair as an atomic unit; a lone leg silently distorts profit.
+- Categories come from the app's chart of accounts, **fetched fresh in this phase.** Never invent one, and if the chart has no category for a leg (accumulated amortization, an accrued liability), stop and ask; never park a leg in a lookalike category.
+
+Then follow the same protocol as every writing skill here:
+
+1. **Plan.** Build the posting list from the finalized adjusting entries, one row per entry: date (the last day of the fiscal year), account, name, category, amount, and its working-paper reference. Name each entry with the prefix `YEAR-END ADJ`, the working-paper reference, and the fiscal year, and put the one-line rationale from the working papers in the note. Any accrual a future payment must clear gets the clearing instruction in the note: the expected payment and the exact category it must receive, so the balance nets to zero instead of the payment being expensed a second time.
+2. **Review.** Show the full posting list to the user.
+3. **Approve.** Wait for explicit approval of that exact list. **Never apply in the same turn as you plan.** Any edit after approval means a new review and a new approval.
+4. **Apply.** In batches, each offsetting pair as an atomic unit.
+5. **Verify.** Re-pull the ledger, rebuild the trial balance, and confirm it now ties to the workbook's adjusted trial balance line by line. Record what was posted, with references, in the Working Papers tab.
+
+Two cautions:
+
+- **Post only figures that are final.** If the T2 preparer later changes the CCA claim or a provision, the posted entries need a follow-up adjustment, never an edit. Say so in the handover.
+- **Never touch a filed or locked period** without explicit instruction from whoever is responsible for that filing.
 
 ---
 
@@ -251,5 +278,6 @@ The standard: a CPA opening this cold can follow any number on the statements do
 - **CRA, not IRS.** Province-correct sales tax. T2, Schedule 8, Schedules 100, 125 and 141.
 - **Prove the sales-tax convention against the app's Profit and Loss** before using any figure.
 - **Audit trail is mandatory.** No untraceable numbers.
+- **Writes happen only in Phase 10**, plan-then-approve, after the statements are finalized. Everything before it is read-only, and posted entries are permanent.
 - **Review-ready, not file-ready.** Output always carries the pending-CPA-review status.
 - **Keep client financials out of version control.**

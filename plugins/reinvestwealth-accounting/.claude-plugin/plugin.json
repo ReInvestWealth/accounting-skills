@@ -1,11 +1,19 @@
 {
   "name": "reinvestwealth-accounting",
   "displayName": "ReInvestWealth Accounting Skills",
-  "description": "Weekly brief, cash-flow forecast, financing package, year-end financials, monthly client review, and client migration skills for books kept in ReInvestWealth.",
-  "version": "0.1.0",
-  "author": { "name": "ReInvestWealth", "url": "https://reinvestwealth.com" },
+  "description": "Bookkeeping catch and correct, weekly brief, monthly health check, cash-flow forecast, financing package, year-end financials, monthly client review, AR and AP reconciliation, and history migration skills for books kept in ReInvestWealth.",
+  "version": "0.3.0",
+  "author": {
+    "name": "ReInvestWealth",
+    "url": "https://reinvestwealth.com"
+  },
   "homepage": "https://www.reinvestwealth.com/skills",
   "repository": "https://github.com/ReInvestWealth/accounting-skills",
   "license": "MIT",
-  "keywords": ["accounting", "bookkeeping", "mcp", "cpa"]
+  "keywords": [
+    "accounting",
+    "bookkeeping",
+    "mcp",
+    "cpa"
+  ]
 }
