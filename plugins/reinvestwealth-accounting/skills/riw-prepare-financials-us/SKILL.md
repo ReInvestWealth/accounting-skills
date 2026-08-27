@@ -2,7 +2,7 @@
 name: "riw-prepare-financials-us"
 description: "Prepare a US corporation's year-end financial statements from books kept in ReInvestWealth: Income Statement and Balance Sheet on the income tax basis of accounting, a tax depreciation schedule, working papers, and a return mapping file for the Form 1120 or 1120-S preparer, all prepared for CPA review with a complete audit trail. As the final step, on its own approval, it posts the year-end adjusting entries (depreciation, accruals, reclasses, corrections) back into the books so the ledger carries the filed position forward. Use when someone asks for year-end financials, financial statements, tax-basis statements, or an 1120 or 1120-S preparation package for a US corporation."
 license: "MIT"
-compatibility: "For US corporations only (IRS, Form 1120 or 1120-S, including LLCs taxed as corporations). Needs the ReInvestWealth accounting MCP server connected to your assistant with access to the client's business, plus the client's prior-year federal return (with its depreciation schedule) and prior-year Balance Sheet as PDFs. Read-only through the statement phases; the final phase posts the approved year-end adjusting entries to the books. WRITES TO PRODUCTION BOOKKEEPING DATA on approval, and posted entries are permanent. Intended for use by or under the review of a CPA."
+compatibility: "US corporations only (IRS, Form 1120 or 1120-S, including LLCs taxed as corporations). Requires the ReInvestWealth accounting MCP server with access to the client's business, plus the prior-year federal return (with depreciation schedule) and prior-year Balance Sheet as PDFs. Read-only through the statement phases; the final phase posts approved year-end adjusting entries. WRITES TO PRODUCTION BOOKKEEPING DATA on approval; posted entries are permanent. For use by or under the review of a CPA."
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
@@ -69,7 +69,7 @@ Workbook tabs, in order:
 
 Two layers, kept separate:
 
-**The face, what the owner reads.** The Income Statement uses the app's own categories, each as its own line. It stays readable because the app's category list is already short. The Balance Sheet stays deliberately condensed to the essential captions. Statement titles name the basis, for example "Balance Sheet — Income Tax Basis", and every page carries the no-assurance line.
+**The face, what the owner reads.** The Income Statement uses the app's own categories, each as its own line. It stays readable because the app's category list is already short. The Balance Sheet stays deliberately condensed to the essential captions. Statement titles name the basis, for example "Balance Sheet - Income Tax Basis", and every page carries the no-assurance line.
 
 **The detail, what the CPA and return preparer need.** The Return Map, Working Papers, and Trial Balance tabs. Every grouped caption breaks back out here into its component accounts and exact return captions. Nothing is lost for filing; it just does not clutter the face.
 
