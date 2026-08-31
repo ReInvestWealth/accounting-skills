@@ -6,7 +6,7 @@ compatibility: "US corporations only (IRS, Form 1120 or 1120-S, including LLCs t
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.1.0
+  version: 0.2.0
   jurisdiction: US
   writes: transactions
 ---
@@ -140,8 +140,8 @@ Pull the general ledger for the fiscal year through the MCP, then:
 Also expect:
 
 - **Every transaction sits in a bank or card account.** Manually created transactions land in a manual cash account. **Do not assume a manual-cash entry is real cash.** Classify each as either cash or a shareholder-account movement (owner-funded payments, personal-account transfers, reimbursements) per Phase 4, reclassify with an adjusting entry, and log the reasoning.
-- **Sign convention:** positive is an outflow. A depository account's balance is the negative of the sum of its amounts; a credit card's amount owing is the positive sum. Confirm this against a known balance rather than assuming it.
-- **Excluded and post-year-end rows:** deleted transactions are out, and expect transactions dated after the year end because the new fiscal year is already accumulating.
+- **Sign convention:** every amount you read through the connection is shown from the business's point of view, for every account type: **positive is money in, negative is money out** (an expense reads negative). Sign is direction, not classification: a positive amount on an expense category is a refund. Confirm against a known transaction rather than assuming.
+- **Excluded and post-year-end rows:** soft-deleted transactions are hidden unless you explicitly ask for them to be included, and expect transactions dated after the year end because the new fiscal year is already accumulating.
 
 ## Phase 4: Deep-dive review
 
@@ -247,11 +247,11 @@ The engagement so far has left the app's ledger where Phase 3b found it: right o
 
 **This phase writes to production bookkeeping data, and it runs only on its own explicit approval.** The Phase 5 sign-off approved the adjustments as statement figures; posting them to the books is a separate decision. If the user declines, that is a fine outcome: note in the handover that the adjustments live only in the workbook, and next year's engagement will meet the Phase 3b gap again.
 
-**How the app takes an adjustment.** The app is a transaction-only ledger: every entry lives in a bank, card, or manual account, the category is the other side of the entry, and there are no journal entries. A posted transaction cannot be deleted (a removal is a void, and the record stays), and its amount and date cannot be changed after it is created. **Confirm the exact write path available to you before posting anything**, then work as though every write is permanent. Express each adjustment in the ledger's own terms:
+**How the app takes an adjustment.** The app is a transaction-only ledger: every entry lives in a bank, card, or manual account, the category is the other side of the entry, and there are no journal entries. Removal is a **soft delete** (the record stays, hidden from reads unless requested, and restorable), and a posted transaction's amount and date cannot be changed after it is created. The write paths are exactly: recategorize, rename, or annotate an existing row; soft-delete it; or post a new entry (created entries take no future dates, no dates in a closed period, and whole cents only). Work as though every write is permanent, because the history effectively is. Express each adjustment in the ledger's own terms:
 
-- **A reclass of an existing row is a recategorization** of that row, never a new entry.
-- **A confirmed duplicate is a void.**
-- **A non-cash adjustment, which is most of them (depreciation, an accrual, a prepaid deferral), is a pair of offsetting entries in a manual account netting to exactly zero cash:** one leg categorized to the expense or income line, the offsetting leg to the balance-sheet category. Post each pair as an atomic unit; a lone leg silently distorts profit.
+- **A reclass of an existing row is a recategorization** of that row, never a new entry. Recategorizing permanently marks the row human-decided, which stops the AI bookkeeper from recategorizing it again; for a year-end reclass that is the desired state.
+- **A confirmed duplicate is a soft delete** (restorable).
+- **A non-cash adjustment, which is most of them (depreciation, an accrual, a prepaid deferral), is a pair of offsetting entries in a manual account netting to exactly zero cash:** one leg categorized to the expense or income line, the offsetting leg to the balance-sheet category. Post each pair as one unit; batch writes report **partial success per row**, so verify both legs landed and remove the orphan if one failed, because a lone leg silently distorts profit.
 - Categories come from the app's chart of accounts, **fetched fresh in this phase.** Never invent one, and if the chart has no category for a leg (accumulated depreciation, an accrued liability), stop and ask; never park a leg in a lookalike category.
 
 Then follow the same protocol as every writing skill here:
@@ -259,7 +259,7 @@ Then follow the same protocol as every writing skill here:
 1. **Plan.** Build the posting list from the finalized adjusting entries, one row per entry: date (the last day of the fiscal year), account, name, category, amount, and its working-paper reference. Name each entry with the prefix `YEAR-END ADJ`, the working-paper reference, and the fiscal year, and put the one-line rationale from the working papers in the note. Any accrual a future payment must clear gets the clearing instruction in the note: the expected payment and the exact category it must receive, so the balance nets to zero instead of the payment being expensed a second time.
 2. **Review.** Show the full posting list to the user.
 3. **Approve.** Wait for explicit approval of that exact list. **Never apply in the same turn as you plan.** Any edit after approval means a new review and a new approval.
-4. **Apply.** In batches, each offsetting pair as an atomic unit.
+4. **Apply.** In batches (up to 250 rows per call), each offsetting pair as one verified unit. **Never blind-retry a create**: writes apply on the first call with no idempotency layer, so a retry can double-post. The app enforces its own period lock server-side (locked rows come back as per-row failures with reasons); treat that as a backstop, not the plan.
 5. **Verify.** Re-pull the ledger, rebuild the trial balance, and confirm it now ties to the workbook's adjusted trial balance line by line. Record what was posted, with references, in the Working Papers tab.
 
 Two cautions:

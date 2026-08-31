@@ -6,7 +6,7 @@ compatibility: "Needs the ReInvestWealth accounting MCP server connected to your
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.1.0
+  version: 0.2.0
   writes: none
 ---
 
@@ -56,14 +56,16 @@ A business can end the quarter comfortable and still miss payroll in week six. A
 
 | What | Used for |
 |---|---|
-| Connected accounts: balance, currency, last-synced time | The starting position |
+| Connected accounts: balance, currency | The starting position |
+| Bank connections: institution, health, last update time | The staleness check on the starting position |
 | Transactions for the last 6 to 12 months, with category, before-tax amount, date, merchant | Recurring-cost detection, payroll cadence, seasonality |
 | Open invoices: amount, customer, issue date, due date if present | Expected inflows |
-| Invoice payment history: when past invoices were issued and when they were paid | The collection lag, which is far better than assuming due dates hold |
 | Pending sales tax returns with due dates and amounts (Canada) | Known outflows with hard dates |
 | Profit and Loss for recent months | Sanity check on the run rate |
 
-**Note what does not exist:** ReInvestWealth has no accounts-payable subledger, so there is no list of bills to pay. Upcoming outflows have to be **derived from recurring transaction history plus known tax dates**. Say this in the assumptions. Do not imply you read a bills list, and do not silently treat the absence of bills as the absence of outflows.
+Transaction reads page at up to 50 rows per call with a cursor, so a 6-to-12-month pull is many pages; plan for it.
+
+**Note what does not exist:** ReInvestWealth has no accounts-payable subledger, so there is no list of bills to pay. Upcoming outflows have to be **derived from recurring transaction history plus known tax dates**. Say this in the assumptions. Do not imply you read a bills list, and do not silently treat the absence of bills as the absence of outflows. Invoices also carry **no payment date**: status, issue date, and due date are all the connection reports, so a per-customer collection lag cannot be computed from invoice records alone (see Phase 2 for the fallbacks).
 
 ---
 
@@ -71,7 +73,7 @@ A business can end the quarter comfortable and still miss payroll in week six. A
 
 Today's cash, per account, from the balances the app reports. Never derive it by summing transactions.
 
-Check each account's last-synced time. A forecast built on a feed that is four days stale starts wrong and stays wrong, so if anything is stale, say so before the forecast and offer to continue anyway with the caveat printed on the page.
+Check freshness at the bank-connection level: the last-update time is reported per institution, not per account, and can be missing (a custom statement-upload account has no sync time at all). A forecast built on a feed that is four days stale starts wrong and stays wrong, so if any connection is stale or its update time is unknown, say so before the forecast and offer to continue anyway with the caveat printed on the page.
 
 Confirm the currency and the jurisdiction. For a business with accounts in more than one currency, forecast in the business's base currency and say which rate basis you used.
 
@@ -81,8 +83,8 @@ Start from open invoices only. Draft invoices are not inflows, they are unsent. 
 
 Then decide the timing, in this order of preference:
 
-1. **The customer's own payment history.** For each customer, the median lag between issue and payment across their past invoices. This is the best predictor you have and it is sitting in the data. Use it, and print the lag you used per customer.
-2. **The due date**, if invoices carry one and the customer has no history.
+1. **The customer's own payment history, if it can actually be established.** Invoice records carry no payment date, so a per-customer lag cannot be read off the invoices. Two honest sources exist: the user telling you how each major customer pays, or matching past paid invoices to their bank deposits by amount and customer within the pulled transactions. Use a matched or stated lag where you have one, print it per customer, and say where it came from. Never present an inferred lag as recorded fact.
+2. **The due date**, if invoices carry one and no lag was established.
 3. **A stated default** if neither exists. Say what you used and that it is a default.
 
 Then apply collection reality, and show it as a line item rather than burying it in the arithmetic:

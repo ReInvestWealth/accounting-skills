@@ -6,7 +6,7 @@ compatibility: "Needs the ReInvestWealth accounting MCP server connected to your
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.1.0
+  version: 0.2.0
   writes: none
 ---
 
@@ -35,15 +35,16 @@ You are giving an owner the month, on one page: did the business make money, is 
 | What | Used for |
 |---|---|
 | Profit and Loss for the month and the trailing 12 months | The month's result and every comparison |
-| Connected accounts: balance, currency, last-synced time | Cash position, and whether the data is current |
+| Connected accounts: balance, currency | Cash position |
+| Bank connections: institution, health, last update time | Whether the data is current |
 | Transactions for the month, with category, before-tax amount, merchant | Category moves, anomalies, new and stopped recurring charges |
 | Open invoices: amount, customer, issue date, due date if present | Receivables and overdue balances |
 | Pending sales tax returns with due dates and amounts (Canada) | The obligations section |
-| Uncategorized and low-confidence counts | The books-hygiene grade |
+| An uncategorized-only transaction listing | The books-hygiene grade (it carries a truncation marker when older uncategorized rows may exist beyond the scan window; count them as "at least") |
 
-There is no accounts-payable subledger, so "what we owe" is out of scope; do not imply otherwise.
+There is no accounts-payable subledger, so "what we owe" is out of scope; do not imply otherwise. There is also no per-row confidence score: hygiene is graded on uncategorized counts and dumping-ground balances, not on a confidence field. Transaction reads page at up to 50 rows per call with a cursor, so a month's pull is several pages.
 
-If any account's feed is stale, say so before the report: a health check on four-day-old data starts wrong.
+Freshness is reported per bank connection (per institution), not per account, and can be missing; a custom statement-upload account has no sync time at all. If any connection is stale or unknown, say so before the report: a health check on four-day-old data starts wrong.
 
 ---
 

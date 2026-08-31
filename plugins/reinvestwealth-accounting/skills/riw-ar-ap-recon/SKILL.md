@@ -6,7 +6,7 @@ compatibility: "Needs the ReInvestWealth accounting MCP server connected to your
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.1.0
+  version: 0.2.0
   writes: transactions
   risk: high
 ---
@@ -28,14 +28,14 @@ The working rhythm is a loop with a human in the middle: build the subledger, ha
 
 **This skill writes to production bookkeeping data, and what it posts is permanent.**
 
-The app protects the audit trail, which means it does not let you undo a mistake cleanly: a posted transaction cannot be deleted, and its amount and date cannot be changed after it is created. A wrong entry is a void plus a fresh entry, permanently visible in the history. **Confirm the exact correction path available to you before you start**, then work as though every entry is permanent, because effectively it is.
+The app protects the audit trail, which means it does not let you undo a mistake cleanly: removal is a soft delete (the record stays, hidden from reads unless requested, and restorable), and a posted transaction's amount and date cannot be changed after it is created. A wrong entry is a soft delete plus a fresh entry, permanently visible in the history. The correction paths available to you are exactly: recategorize, rename, or annotate an existing row; soft-delete it (restorable); or post a new entry. Work as though every entry is permanent, because the history effectively is.
 
 So the protocol is not optional:
 
 1. **Plan.** Build every entry. Assert the tie-outs in code. Change nothing.
 2. **Review.** Emit the full workbook and show it to a human.
 3. **Approve.** Wait for explicit approval. **Never apply in the same turn as you plan.** Never infer approval from enthusiasm. Any edit after approval means a new review and a new approval.
-4. **Apply.** In order, settlements as atomic pairs.
+4. **Apply.** In order, settlements as atomic pairs. Writes apply on the first call, report per-row success and failure, and have no idempotency layer: check the counts after every call, and **never blind-retry a create**, because a retry can double-post. On any doubt, re-read before re-sending.
 5. **Verify.** Re-read from the app and prove the tie-outs from live data.
 
 **Never guess.** Not a category, not a tax rate, not a due date, not which payment settles which invoice. Every one of those has a right answer available: read it from the app, or put the question in the workbook's Queries tab and let the accountant decide. A plausible guess posted into a client's books is worse than a delay.
@@ -61,9 +61,9 @@ An invoice of 1,130.00 = 1,000.00 service revenue + 130.00 HST (Ontario), paid i
 
 | # | Event | Account | Amount | Category | Sales tax |
 |---|---|---|---|---|---|
-| 1 | Invoice issued | AR ledger | -1,130.00 | Service Revenue | Yes: 1,000.00 before tax, 130.00 HST |
-| 2 | Payment lands: **recategorize the existing bank row** | Chequing | -1,130.00 (unchanged) | Interfund Transfer | None |
-| 3 | Same approved batch: **new entry** | AR ledger | +1,130.00 | Interfund Transfer | None |
+| 1 | Invoice issued | AR ledger | +1,130.00 | Service Revenue | Yes: 1,000.00 before tax, 130.00 HST |
+| 2 | Payment lands: **recategorize the existing bank row** | Chequing | +1,130.00 (unchanged) | Interfund Transfer | None |
+| 3 | Same approved batch: **new entry** | AR ledger | -1,130.00 | Interfund Transfer | None |
 
 After 1: AR 1,130, revenue 1,000, sales tax payable 130. After 2 and 3: cash up 1,130, AR back to zero.
 
@@ -73,19 +73,20 @@ A bill of 1,130.00 = 1,000.00 professional fees + 130.00 recoverable HST, paid f
 
 | # | Event | Account | Amount | Category | Sales tax |
 |---|---|---|---|---|---|
-| 1 | Bill received | AP ledger | +1,130.00 | Professional Fees | Yes: 1,000.00 before tax, 130.00 HST |
-| 2 | Payment leaves: **recategorize the existing bank row** | Chequing | +1,130.00 (unchanged) | Interfund Transfer | None |
-| 3 | Same approved batch: **new entry** | AP ledger | -1,130.00 | Interfund Transfer | None |
+| 1 | Bill received | AP ledger | -1,130.00 | Professional Fees | Yes: 1,000.00 before tax, 130.00 HST |
+| 2 | Payment leaves: **recategorize the existing bank row** | Chequing | -1,130.00 (unchanged) | Interfund Transfer | None |
+| 3 | Same approved batch: **new entry** | AP ledger | +1,130.00 | Interfund Transfer | None |
 
 ### Sign rules
 
-- **Depository accounts** (the AR ledger, chequing): positive is money out, **negative is money in**.
-- **Credit accounts** (the AP ledger, cards): inverted. Positive increases the balance owed, negative reduces it.
-- **Sales tax amounts carry the same sign as the entry amount**: collected tax on a revenue accrual is negative, recoverable tax on an expense accrual positive.
+- **One convention for every account and every amount you read or write: positive is money into the business, negative is money out.** The balance-sheet side comes from the account's type (depository reads as an asset, credit as a liability), never from flipping signs.
+- Sign is direction, not classification: a positive amount on an expense category is a refund, not income.
+- **Sales tax is set by naming the taxes on the row; the app computes every rate and amount** from its own rate table, carrying the row's sign: collected tax on a revenue accrual reads positive, recoverable tax on an expense accrual negative. Your tax figures in the workbook are predictions to verify against what the app computed.
+- **Confirm against a known transaction before posting at scale**: read one existing row whose direction you know and check the sign matches.
 
 ### The three rules that keep it balanced
 
-1. **Sales tax lives on the accrual leg only.** Settlement legs are always untaxed, and when you recategorize a bank row to Interfund Transfer, any sales tax on it must come off at the same time. Tax on both legs double-counts the tax; tax left on the cash row after reclass means the same tax is claimed twice.
+1. **Sales tax lives on the accrual leg only.** Settlement legs are always untaxed, and when you recategorize a bank row to Interfund Transfer, any sales tax on it must come off at the same time (clearing tax means setting the row's tax list to empty; the app recomputes from what you name). Tax on both legs double-counts the tax; tax left on the cash row after reclass means the same tax is claimed twice. Know the side effect: setting a category or tax on a row permanently marks it human-decided, which stops the AI bookkeeper from ever recategorizing it. For settlements and accruals that is exactly right, but it is irreversible.
 2. **Interfund legs are posted as a balanced pair, in the same approved batch, netting to exactly zero.** The app treats interfund transfers as neutral to profit, and a lone leg (or a pair that does not net to zero) silently distorts retained earnings. Never post one leg planning to add the other later.
 3. **Settlement recategorizes the existing cash row; it never creates a second one.** The money already moved and the bank feed already recorded it. A new cash row would double cash.
 
@@ -95,7 +96,7 @@ A bill of 1,130.00 = 1,000.00 professional fees + 130.00 recoverable HST, paid f
 
 One pair per business. They appear in the app named in the pattern **ReInvestWealth Accounts Receivable CAD Accrual Ledger** and **ReInvestWealth Accounts Payable CAD Accrual Ledger** (the currency matching the business's base currency), and their balances are the AR and AP lines on the balance sheet.
 
-- If the pair does not exist, set it up first: create the accounts if your connection supports account setup, otherwise ask ReInvestWealth to provision them. **After creating them, confirm the balance sheet still renders and shows both accounts on the correct sides before posting a single transaction.** A misconfigured account is much cheaper to find empty.
+- If the pair does not exist, create it through the connection: the AR ledger as a **depository-type** account (chequing or savings) and the AP ledger as a **credit-type** account, both in the business's base currency. Mind the cap: a company can hold at most **five custom accounts**, and this pair consumes two of them, so confirm the client is not near the limit before creating. **After creating them, confirm the balance sheet still renders and shows both accounts on the correct sides before posting a single transaction.** A misconfigured account is much cheaper to find empty (and retiring a custom account is a soft disable that keeps its transactions, so a wrong creation is recoverable but not erasable).
 - The accounts are visible in the client's account list alongside their real banks. Tell the client what they are, so nobody "cleans them up".
 - **Nothing posts into these accounts except this process.** That single rule is what makes the ledger account balance the truth for AR and AP, and what makes reruns safe: on a new run, the prior state is read from the ledger accounts themselves.
 
@@ -125,7 +126,7 @@ Confirm which business, then resolve and report back before continuing: the base
 
 ### Phase 2: Pull state
 
-Fetch fresh, never from memory: the app's chart of accounts and category list, the sales-tax rates for the jurisdiction, all transactions for the period plus enough history to catch late-settling items, all invoices, and **everything already sitting in the two ledger accounts**, which is the record of what prior runs accrued and settled. If the accountant returned a workbook, read its input tabs now.
+Fetch fresh, never from memory: the app's chart of accounts and category list, the sales-tax registration for the jurisdiction (the rates themselves live server-side and are applied by the app when you name a tax), all transactions for the period plus enough history to catch late-settling items, all invoices, and **everything already sitting in the two ledger accounts**, which is the record of what prior runs accrued and settled. If the accountant returned a workbook, read its input tabs now. Transaction reads page at up to 50 rows per call with a cursor: a full-period pull is many pages, so plan for it rather than assuming one call returned everything.
 
 ### Phase 3: Build the open-items list
 
@@ -137,7 +138,7 @@ Rules, applied here so a blocked item never reaches the proposal set:
 - **The double-count guard.** If the cash for an item is already in the books categorized as revenue or expense (the app's automatic categorization does this routinely, and it is correct on a cash basis), accruing it too would count the income or expense twice. Such an item is either settled properly (accrue, then reclass that cash row as the settlement, all in the same reviewed plan) or not accrued at all. Flag every case in the workbook; never accrue on top of recognized cash.
 - **Fiscal-year gate.** An accrual dated outside the current fiscal year goes to Queries unless the accountant explicitly approves that specific item; it changes a comparative period.
 - **Filed-period gate.** A taxed accrual dated inside an already-filed sales-tax period is blocked outright, because the tax on the accrual leg would change a filed return. Inside a return currently being prepared: flagged, not blocked.
-- **Currency gate.** An item whose currency differs from the business's base currency goes to Queries rather than being accrued at a guessed rate. Accrue foreign-currency items only when the accountant has agreed the rate treatment, using the app's own daily rates, and any difference on settlement goes to FX gain or loss, never to rounding.
+- **Currency gate.** An item whose currency differs from the business's base currency goes to Queries rather than being accrued at a guessed rate. Accrue foreign-currency items only when the accountant has agreed the rate treatment. The app converts posted rows to base currency itself, from its own daily rates; the connection can look those rates up for any date and pair, so predict the base amounts in the workbook and verify them after posting. Any difference on settlement goes to FX gain or loss, never to rounding.
 
 ### Phase 4: Match payments to open items
 
@@ -195,9 +196,9 @@ Only what was approved, in this order:
 
 1. **The ledger accounts**, if they were missing, as their own step, with the balance-sheet check before anything is posted to them.
 2. **Accruals**, one entry per open item.
-3. **Settlements**, each group applied as one atomic unit: the bank-row recategorization and every matching ledger leg together, never split, because an unpaired interfund leg distorts equity.
+3. **Settlements**, each group applied as one unit: the bank-row recategorization and every matching ledger leg together, never split, because an unpaired interfund leg distorts equity. The connection is not transactional across rows, and batch writes report **partial success** per row, so after every settlement group verify both sides landed; if one leg failed (a period lock is the usual reason), soft-delete or revert the leg that did land, report it, and re-plan that item rather than leaving a lone leg.
 
-Apply the gates from Phase 3 as refusals: report what was blocked and why, and do not work around them.
+Apply the gates from Phase 3 as refusals: report what was blocked and why, and do not work around them. The app enforces its own period lock server-side (locked rows come back as per-row failures with reasons); treat that as a backstop that confirms your gates, never as the plan.
 
 ### Phase 8: Verify from live data
 

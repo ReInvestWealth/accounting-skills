@@ -6,7 +6,7 @@ compatibility: "Needs the ReInvestWealth accounting MCP server connected to your
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.1.0
+  version: 0.2.0
   writes: none
 ---
 
@@ -45,12 +45,12 @@ An owner can also run this on their own books. The framing below assumes a bookk
 | Which business | Yes | Ask if not given; list the options once |
 | Target month | No | The last completed calendar month |
 | Personal note | No | Ask once whether there is any human context to warm the email. If none, proceed |
-| Recipient | No | The business's primary contact from the app. Always confirm out loud before sending |
+| Recipient | Yes | Ask the user: the connection exposes no contact email for the business (the company profile carries none, and team-member listings deliberately omit emails). Always confirm out loud before sending |
 | Greeting name | No | Ask if the client goes by a short form of their recorded name |
 
 ## What you need from the MCP
 
-Profit and Loss for the target month and the two before it; the transaction detail behind those months with categories and before-tax amounts; the shareholder or owner account entries for the period; sales tax collected and input credits for the month (Canada); the count and value of uncategorized or pending transactions; and the business profile with its primary contact, jurisdiction, and currency.
+Profit and Loss for the target month and the two before it; the transaction detail behind those months with categories and before-tax amounts (reads page at up to 50 rows per call with a cursor, so three months is several pages); the shareholder or owner account entries for the period; the month's sales-tax report (Canada); the count and value of uncategorized or pending transactions (an uncategorized-only listing exists and answers this directly); and the business profile with its jurisdiction and currency. The profile carries no contact email, which is why the recipient is an input.
 
 ---
 

@@ -1,12 +1,12 @@
 ---
 name: "riw-catch-and-correct"
-description: "Catch and correct bookkeeping errors in ReInvestWealth: scan for duplicate transactions, one-sided or miscoded transfers, misfiled refunds, owner and shareholder movements, loan payments in the wrong category, cross-currency and FX discrepancies, category drift, direction anomalies, stale categories, and sales tax errors, then grade the books and report what it found. When email, file storage, or calendar connections are available, it hunts receipts and confirmations to settle ambiguous findings. Optionally fixes approved items by recategorizing rows, pairing transfer legs, or voiding confirmed duplicates. The scan itself is read-only; nothing is changed without an explicit approval. Use when someone asks to catch and correct errors, check the books, find mistakes, clean up or tidy the books, fix miscategorized transactions, hunt duplicates, review sales tax coding, or make sure the books are right before a filing, a year end, or a decision. For a business-level month in review, use riw-monthly-health-check instead."
+description: "Catch and correct bookkeeping errors in ReInvestWealth: scan for duplicate transactions, one-sided or miscoded transfers, misfiled refunds, owner and shareholder movements, loan payments in the wrong category, cross-currency and FX discrepancies, category drift, direction anomalies, stale categories, and sales tax errors, then grade the books and report what it found. When email, file storage, or calendar connections are available, it hunts receipts and confirmations to settle ambiguous findings. Optionally fixes approved items by recategorizing rows, pairing transfer legs, or soft-deleting confirmed duplicates. The scan itself is read-only; nothing is changed without an explicit approval. Use when someone asks to catch and correct errors, check the books, find mistakes, clean up or tidy the books, fix miscategorized transactions, hunt duplicates, review sales tax coding, or make sure the books are right before a filing, a year end, or a decision. For a business-level month in review, use riw-monthly-health-check instead."
 license: "MIT"
 compatibility: "Needs the ReInvestWealth accounting MCP server connected to your assistant. Also uses, read-only and only when present, other connected sources (email, file storage, calendar) to corroborate findings; none are required. The scan is read-only; applying fixes needs write access and WRITES TO PRODUCTION BOOKKEEPING DATA. Built for owners as well as accountants and bookkeepers. Sales tax checks are Canada specific; everything else applies in Canada and the United States."
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.2.0
+  version: 0.3.0
   writes: transactions
   risk: medium
 ---
@@ -24,14 +24,14 @@ A plain "check my books" request means half one. Do not treat it as permission f
 
 ## Read this before you touch anything
 
-The scan is read-only. **The correct pass writes to production bookkeeping data**, and the app protects the audit trail: a posted transaction cannot be deleted (a removal is a void, and the record stays), and its amount and date cannot be changed after it is created. **Confirm the exact correction path available to you before applying anything**, then work as though every write is permanent.
+The scan is read-only. **The correct pass writes to production bookkeeping data**, and the app protects the audit trail: a removal is a **soft delete** (the record stays, disappears from lists and reports unless explicitly requested, and can be restored), and a posted transaction's amount and date cannot be changed after it is created. One more thing is irreversible in the other direction: **setting a row's category, tax, or tag permanently marks it human-decided, which stops the AI bookkeeper from ever recategorizing that row again.** A broad recategorization pass converts that slice of the books to manual forever, so say so in the review before applying one.
 
 So the correct pass follows the same protocol as every writing skill here:
 
 1. **Plan.** Build every proposed fix. Assert the math in code. Change nothing.
 2. **Review.** Show the full fix list, one row per change, to a human.
 3. **Approve.** Wait for explicit approval of that exact list. **Never apply in the same turn as you plan.** Any edit after approval means a new review and a new approval.
-4. **Apply.** In batches; voids and transfer pairs as atomic units.
+4. **Apply.** In batches; deletions and transfer pairs as their own verified units.
 5. **Verify.** Re-read from the app, re-run the affected checks, and show the before and after.
 
 **Never guess.** A finding you cannot support with evidence from the books or a document is a question for the human, not a fix. A plausible guess posted into a client's books is worse than a delay.
@@ -42,16 +42,17 @@ So the correct pass follows the same protocol as every writing skill here:
 
 ## What a fix can be
 
-The app is a transaction-only ledger: every entry lives in a real bank or card account, the category is the other side of the entry, and there are no journal entries. That limits fixes to exactly four moves:
+The app is a transaction-only ledger: every entry lives in a real bank or card account, the category is the other side of the entry, and there are no journal entries. That limits fixes to exactly five moves:
 
-- **Recategorize** an existing row (and correct its sales tax at the same time, since tax rides on the row).
-- **Void** a row that should not exist, such as a confirmed duplicate.
+- **Recategorize** an existing row (and correct its sales tax at the same time, since tax rides on the row; tax is set by naming the taxes, and the app computes every rate and amount).
+- **Soft-delete** a row that should not exist, such as a confirmed duplicate. The record stays and can be **restored**, which is also this skill's undo for its own mistaken deletions.
 - **Post a new entry**, mainly the missing leg of an interfund-transfer pair.
-- **Ask.** Anything that needs an amount or a date changed is a void plus a fresh entry, and anything ambiguous is a query, not a write.
+- **Rename or annotate** a row, which is the one edit that does NOT mark it human-decided.
+- **Ask.** Anything that needs an amount or a date changed is a soft delete plus a fresh entry, and anything ambiguous is a query, not a write.
 
 Categories come from the app's chart of accounts, **fetched fresh at the start of every run**. Never invent one, and never copy a code off an existing transaction, which may carry a stale value.
 
-Sign conventions, for every direction test below: depository accounts read positive for money out and negative for money in; credit accounts are inverted.
+Sign convention, for every direction test below: one convention for every account type, **positive is money into the business, negative is money out**. Sign is direction, not classification: a positive amount on an expense category is a refund reducing that expense, not income. Confirm against a known transaction before relying on it at scale.
 
 ---
 
@@ -61,7 +62,7 @@ Run all of them in code over the scoped period. Each finding carries the transac
 
 ### 1. Duplicates
 
-Same account, same date, same amount is a suspect pair; **do not require descriptions to match**, they differ between a feed and a manual upload, which is the classic source. Exclude legitimate same-amount recurrences by checking the pattern: a genuine weekly charge produces a series, a duplicate produces an isolated double. Tier: Ask, then the fix is voiding the confirmed extra row.
+Same account, same date, same amount is a suspect pair; **do not require descriptions to match**, they differ between a feed and a manual upload, which is the classic source. Exclude legitimate same-amount recurrences by checking the pattern: a genuine weekly charge produces a series, a duplicate produces an isolated double. The per-row audit trail is readable through the connection and often settles provenance (one row from the feed, one entered by hand). Tier: Ask, then the fix is soft-deleting the confirmed extra row (restorable if the call turns out wrong).
 
 ### 2. Transfers
 
@@ -87,7 +88,7 @@ A cross-currency pair that does not net to zero can be real bank FX, the spread 
 
 Skip this whole group for a US business, and never introduce sales tax on US books.
 
-- **Per-row math.** Before-tax amount plus taxes must equal the total to the penny, and every rate used must exist in the app's own rate data for that region. Never validate against a hardcoded rate. Tier Fix.
+- **Per-row math.** Before-tax amount plus taxes must equal the total to the penny. Never validate against a hardcoded or remembered rate: the rates live server-side, and a fix is applied by naming the correct taxes on the row, after which the app recomputes every amount from its own rate table. Verify the recomputed row afterward. Tier Fix.
 - **Claimable versus display-only.** A tax is claimable only if the business is registered for it and, on non-revenue rows, the rate is refundable. Non-refundable provincial tax (PST in BC, SK and MB) claimed as an input credit is a real error. Tier Fix.
 - **Sibling inconsistency.** A merchant taxed on some rows and untaxed on same-era siblings in the same region. The precedent decides which side is wrong; no precedent and no invoice evidence means tier Ask, never a guessed rate.
 
@@ -119,13 +120,13 @@ Use those sources to settle findings, never to browse. For an Ask-tier finding, 
 ## Phases
 
 1. **Scope.** Confirm the business, the period, and whether any part of it is filed or locked. Note which outside evidence sources are connected. Default to the current fiscal year when the user does not say.
-2. **Read.** Fetch the chart of accounts fresh, the sales-tax rate data, and every transaction in scope, including voided rows so voids are not re-proposed.
+2. **Read.** Fetch the chart of accounts fresh, the sales-tax registration, and every transaction in scope, **explicitly asking for deleted rows to be included** (the connection hides soft-deleted rows by default) so prior removals are not re-proposed. The uncategorized backlog can be pulled directly with an uncategorized-only listing; reads page at up to 50 rows per call with a cursor, so a full-period pull is many pages.
 3. **Detect.** Run every check in code. Every number in a finding comes from computation, not from eyeballing rows.
 4. **Corroborate.** For Ask-tier findings, search whatever outside sources are connected (per Evidence beyond the books) and attach what turns up. Retier only what the evidence genuinely decides.
 5. **Report.** Deliver the diagnostic report (format below). If the user only asked for a check, **stop here.**
 6. **Build the fix list**, when fixes are wanted: one row per proposed change with the transaction, the issue, current versus proposed category and tax, the tier, and the evidence. Ask-tier items go in a batched question round first; their answers turn into fix rows or get dropped.
 7. **Review and approve.** Blocking, per the protocol above.
-8. **Apply.** Recategorizations in batches; each void and each transfer pair as an atomic unit. Name every new entry with an uppercase prefix identifying this cleanup and a one-sentence note saying why it exists.
+8. **Apply.** Recategorizations in batches (the connection takes up to 250 rows per call and reports per-row success and failure; rows in locked periods come back as failures with reasons); each deletion and each transfer pair as its own unit, verified before moving on. **Never blind-retry a create**: writes apply on the first call with no idempotency layer, so a retry can double-post. Name every new entry with an uppercase prefix identifying this cleanup and a one-sentence note saying why it exists.
 9. **Verify.** Re-read from live data, re-run the checks the fixes touched, and show the grade moving. Any fix that did not land as planned gets reported, never papered over.
 
 ---
@@ -145,10 +146,11 @@ One page, written for the owner even when an accountant runs it:
 
 - **Fixing in the same turn as scanning.** The report and the fix list are separate deliverables with an approval between them.
 - **Requiring descriptions to match when hunting duplicates.** They differ between systems.
-- **Voiding a recurrence as a duplicate.** Check the series pattern first.
+- **Deleting a recurrence as a duplicate.** Check the series pattern first.
+- **Mass-recategorizing without saying it silences the AI bookkeeper on those rows.** Human-decided is permanent; put it in the review.
 - **Recategorizing one transfer leg without its pair.** Pairs move together or not at all.
 - **Leaving old sales tax on a row recategorized to interfund.** The tax comes off with the reclass.
-- **Validating tax against a remembered rate.** Rates come from the app's rate data, every time.
+- **Computing or hardcoding a tax rate yourself.** Name the taxes on the row; the app computes the amounts. Verify afterward.
 - **Introducing sales tax on US books.** The tax checks are Canada only.
 - **Deciding what was personal.** Flag it; the owner decides.
 - **Browsing connected email or files.** Outside sources get targeted searches built from a finding, nothing wider.

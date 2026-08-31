@@ -6,7 +6,7 @@ compatibility: "Needs the ReInvestWealth accounting MCP server connected to your
 metadata:
   publisher: ReInvestWealth
   homepage: https://www.reinvestwealth.com/skills
-  version: 0.1.0
+  version: 0.2.0
   writes: transactions
   risk: high
 ---
@@ -29,17 +29,18 @@ There is also a fourth, narrower job at the end: filling a gap where a live bank
 
 The app is built to protect the audit trail, which means it does not let you undo a mistake cleanly:
 
-- A posted transaction **cannot be deleted.** Removing one means voiding or soft-deleting it, and the record stays.
-- A posted transaction's **amount and date cannot be changed after it is created.** A wrong amount or a wrong date is not an edit, it is a void plus a fresh entry, permanently visible in the history.
+- Removal is a **soft delete**: the record stays, disappears from lists and reports, and can be restored. Deleted rows are hidden from reads unless you explicitly ask for them to be included.
+- A posted transaction's **amount and date cannot be changed after it is created.** A wrong amount or a wrong date is not an edit, it is a soft delete plus a fresh entry, permanently visible in the history.
+- Creates are checked server-side: no future dates, no dates inside a closed period, whole cents only.
 
-**Confirm the exact correction path available to you before you start**, so you know what a mistake will cost. Then work as though every entry is permanent, because effectively it is.
+The correction paths, concretely: recategorize, rename, or annotate an existing row; soft-delete it (restorable); or post a new entry. That is the whole toolbox. Work as though every entry is permanent, because the history effectively is.
 
 That single fact is why the protocol below is not optional:
 
 1. **Plan.** Build every entry. Assert the tie-outs in code. Change nothing.
 2. **Review.** Produce a full review table, one row per entry, and show it to a human.
 3. **Approve.** Wait for explicit approval of that exact set. **Never apply in the same turn as you plan.** Never infer approval from enthusiasm. Any edit after approval means a new review and a new approval.
-4. **Apply.** In batches, in order.
+4. **Apply.** In batches, in order. The connection creates up to 250 rows per call and reports **partial success**: per-row created and failed lists with reasons. Check the counts after every batch, and resolve failures before the next batch. **Never blind-retry a create call**: writes apply on the first call with no idempotency layer, so a retry can double-post. On any doubt, re-read before re-sending.
 5. **Verify.** Re-read from the app and prove the result against the client's own figures.
 
 **Never guess.** Not a category, not a currency, not a tax rate, not a sign convention. Every one of those has a right answer available: ask for it, or read it from the app. A plausible guess posted into a client's books is worse than a delay.
@@ -73,12 +74,12 @@ Mapping guidance for the balance-sheet lines that come up most:
 
 ### Sign convention
 
-Branch on the account type, and **confirm it against a known balance rather than assuming**:
+Everything you read and write through the connection uses one convention, for every account type: **positive is money into the business, negative is money out.** An expense of 42.50 is minus 42.50; revenue received is positive. Sign is direction, not classification: a positive amount on an expense category is a refund reducing that expense, not income.
 
-- **Depository accounts:** positive is money out (expenses, asset purchases). **Negative is money in** (revenue, liabilities and equity received).
-- **Credit accounts:** inverted. Positive increases the balance owed (purchases); negative is a payment or refund.
+Two cautions that keep this honest:
 
-So a depository account's balance is the negative of the sum of its entries, and a credit card's amount owing is the positive sum.
+- **Source files do not share this convention.** Bank exports, prior-system ledgers, and raw statements sign things their own way (some the exact opposite). Establish the source's convention by tying to a known balance, then convert to the connection's convention. Never assume.
+- **Confirm against a known transaction before posting at scale.** Read one existing row whose direction you know (a real expense, a real deposit) and check the sign you get back matches this convention.
 
 ### Currency
 
@@ -87,29 +88,31 @@ Two currencies matter on **every** row, and both must be resolved before any mat
 - **Transaction currency is the bank account's currency.**
 - **Base currency is the business's base currency**, which is per-business and not always CAD.
 
-The FX rate is base-currency units per one unit of account currency, and the base amount is the transaction amount times that rate, rounded to the cent. Keep it internally consistent per row. When the two currencies match, the rate is 1.
+The FX rate is base-currency units per one unit of account currency, and the base amount is the transaction amount times that rate, rounded to the cent. When the two currencies match, the rate is 1.
 
-Resolving the rate, in order:
+**The app converts, not you.** A posted transaction carries only its amount in the account currency; the app computes the base amount itself, from its own daily rate table for the transaction's date. You cannot send a rate or a base amount, and you cannot override the conversion afterward. What you CAN do is look the app's daily rate up through the connection for any date and currency pair (the same rates the app applies), so:
 
-1. **A client-provided rate**, mainly for opening balances: use *their* year-end rate so equity ties to what they filed.
-2. **The app's own daily rates** for the relevant date. For per-transaction history, use each transaction's own date.
-3. If neither resolves, **ask.** Never guess a rate.
+1. **Predict.** Before the review table, look up the app's rate for each foreign-currency row's date and compute the base amount you expect the app to produce. Those predicted figures are what the review table shows.
+2. **Verify.** After applying, re-read the rows and confirm the app's base amounts match your predictions. A mismatch means a rate-date subtlety (the app walks back up to ten days to the nearest published rate; the lookup reports the date it actually used). Investigate before reporting.
+3. **When a rate lookup comes back empty**, ask. Never guess a rate.
 
-**Reconcile the pennies before the review table.** Rounding each row independently scatters one-cent artifacts across statement lines. Where the client stated an exact base-currency figure for a line, override that entry's base amount to match by the penny, and let the cash account's base-currency presentation absorb the remainder: cash truth is its own currency, and its base value is derived anyway. **Do not book rounding pennies to FX gain or loss.** The ledger balances by construction, so there is never a residual to book. FX gain or loss is for real currency differences, such as clearing a base-currency liability with foreign-currency payments.
+**A client-provided year-end rate cannot be forced onto posted rows.** Where the client filed with their own year-end rate and the equity tie depends on it, the app's conversion of your opening entries may differ from the filed base figures by an FX presentation amount. Compute that difference up front, show it in the review table, and agree with the operator how to treat it before posting. **Do not book rounding pennies to FX gain or loss.** FX gain or loss is for real currency differences, such as clearing a base-currency liability with foreign-currency payments.
 
 ### Sales tax: a zero-mistake zone (Canada)
 
 ReInvestWealth e-files GST, HST and QST returns, so imported transactions must carry sales tax exactly the way the app does, or not at all.
 
-1. **Rates come only from the app's own sales-tax rate data.** Never hardcode a rate, never improvise one, and never accept a rate from the client's file without matching it to the app's rate for that region.
+1. **Tax is recorded by NAME; the app computes the amounts.** You put sales tax on a row by naming the taxes that apply (and the region when it is not the home province); every rate and amount is computed server-side from the app's own rate table against the row's amount. Never hardcode a rate, never improvise one, and never accept a rate from the client's file at face value: your per-row tax math is a prediction to validate against what the app computed after applying, not a value you send.
 2. **Claimable versus display-only.** A tax is claimable only if the business is registered for it **and**, on non-revenue rows, the rate is refundable. Non-refundable provincial tax (PST in BC, SK and MB) on a purchase is a real cost for every business because PST has no input-credit mechanism: it is display-only and stays inside the expense. The before-tax amount subtracts claimable taxes only.
 3. **Mixed treatment means split the transaction.** If one cash row contains parts with different tax treatment, create one entry per part, each with its correct treatment, the parts summing exactly to the cash amount, every note citing the same source row. **Never average, and never apply a blended rate.**
 4. **Region** defaults to the business's home province unless the source data explicitly shows another jurisdiction's tax was charged.
 5. **No per-row tax evidence means no tax in the books, but never silently.** If the export has no tax codes, tax columns, or per-transaction tax legs, import the rows untaxed, change nothing, and **report those rows to the operator** so they can ask the client. Guessing is prohibited.
 6. **An already-filed period does not change the rule.** If a transaction genuinely carried sales tax, record it, even where its filing period was filed from the prior system.
-7. **Validate in code before review:** per row, the before-tax amount plus the taxes equals the total to the penny; every rate used exists in the app's rate data for that region; claimed taxes are refundable; and the aggregate collected tax reconciles to the source books.
+7. **Validate before review, and verify after applying:** per row, the before-tax amount plus the taxes must equal the total to the penny, claimed taxes must be refundable, and the aggregate collected tax must reconcile to the source books. After the tax is applied, re-read the rows and confirm the app's computed tax matches your prediction to the penny.
 
-Collected tax on revenue rows carries the same sign as the amount, so it reads negative on a depository inflow. Input credits on expense rows read positive.
+Tax amounts carry the same sign as the row they ride on: collected tax on a revenue row reads positive (part of the money in), and an input credit on an expense row reads negative.
+
+Also mind the flag the app sets: putting sales tax on a row (like categorizing it) permanently marks the row as human-decided, which stops the AI bookkeeper from ever recategorizing it. For a migration that is the desired state, but know that it is irreversible.
 
 ### Naming every entry
 
@@ -129,12 +132,12 @@ Give every posted entry a name with an uppercase prefix that identifies the migr
 | Year-end FX rate | If any line is not in the base currency and the client filed a return, use **their** year-end rate so equity ties to the filing |
 | Account mapping | Which connected accounts map to which balance lines |
 
-Also confirm: **is pre-D transaction history being removed?** The usual case is yes, all prior activity is summarized in these balances. If transactions exist before D, void them first as their own reviewed change, so they do not double-count with the opening position.
+Also confirm: **is pre-D transaction history being removed?** The usual case is yes, all prior activity is summarized in these balances. If transactions exist before D, soft-delete them first as their own reviewed change, so they do not double-count with the opening position. (They stay restorable, and stay out of every list and report.)
 
 **The model.** Two invariants:
 
-1. **Each bank or card account's entries must net to that account's true opening balance.** Depository: money in is negative, so entries sum to the negative of the balance. Credit card: entries sum to the positive balance owed.
-2. **Every non-cash balance line becomes one entry in the primary operating account dated D**, categorized to its mapped account: liabilities and equity as inflows (negative), assets as outflows (positive).
+1. **Each bank or card account's entries must net to that account's true opening balance.** In the connection's convention (positive is money in), a bank account's entries sum directly to its balance, and a credit card's entries sum to the negative of the amount owed.
+2. **Every non-cash balance line becomes one entry in the primary operating account dated D**, categorized to its mapped account: liabilities and equity as inflows (positive), assets as outflows (negative).
 
 **Retained earnings is the balancing figure and has no category.** It is created by posting each account's residual as a profit-and-loss entry **dated D minus 1, the last day of the prior period**:
 
@@ -163,7 +166,7 @@ The app rolls prior-period profit and loss into retained earnings, so these D-mi
 | Input | Notes |
 |---|---|
 | Transactions file | CSV or spreadsheet. One file per account is cleanest; a combined file needs an account column |
-| Target accounts | Which connected account each set of rows belongs to |
+| Target accounts | Which connected account each set of rows belongs to. If a needed account does not exist yet, the connection can create a custom one (name, type, currency, optional last four digits); a company can hold at most five custom accounts, so plan the account list before creating any |
 | Period | The date range to import, and where the live bank feed or statement uploads take over |
 | Currency | Per account, and per row only if the file mixes them |
 | Ending balances | The statement balance at the end of the imported period. **This is the verification anchor** |
@@ -174,7 +177,7 @@ The app rolls prior-period profit and loss into retained earnings, so these D-mi
 1. **Scope the boundary.** The import must not overlap the live feed, statement uploads, or an opening-balance position covering the same activity. If existing rows overlap the period, resolve that first as its own reviewed change.
 2. **Resolve.** Chart of accounts fetched fresh, base currency, account identities.
 3. **Parse and normalize.** Every row to date, amount, description, category, account. Handle the file's quirks explicitly: date formats, debit and credit columns versus a signed amount, thousands separators. **Establish the sign convention by tying to a known balance:** compute the implied ending balance under your assumed convention and compare it to the client's statement. **Never assume which way their export signs things.** Then convert to the app's convention.
-4. **Guard against duplicates.** Against existing rows in each target account, treat the same account, date and amount as a suspected duplicate. **Do not require the description to match**, because descriptions differ between systems. Exclude suspects and list them in the review as skipped, with reasons.
+4. **Guard against duplicates, and know you are the only guard.** Against existing rows in each target account, treat the same account, date and amount as a suspected duplicate. **Do not require the description to match**, because descriptions differ between systems. Exclude suspects and list them in the review as skipped, with reasons. Rows this skill posts into an account are **invisible to the app's own statement and bank-feed duplicate detection**, so nothing downstream will catch what this check misses: if a statement upload or feed later covers the same period, the same charge can land twice.
 5. **Categorize, with no silent guessing.**
    - Where the client has categories, map each distinct one to the app's chart of accounts **once**, and show the full mapping table for approval.
    - Where they do not, propose from descriptions, mark each row's confidence, and default low-confidence rows to other expense or other revenue, flagged for the client to recategorize in the app. The app's interface is good at this; do not over-engineer it here.
@@ -196,7 +199,7 @@ Same machinery, different situation: the accounts are live and connected, but th
 1. **Match one to one.** Statement rows against active app rows per account, on exact amount, with a date window of a few days because posting dates drift. Each app row can be claimed once. The unmatched statement rows are your candidates. **Require zero unmatched app rows inside the statement window**, which is what proves the app side has no duplicates and your sign convention is right.
 2. **Align on minimum total lag, not nearest date.** Inside a cluster of same-amount rows (a recurring small charge, repeated identical card payments), nearest-date matching can claim an app row for the wrong statement row and flag the wrong **date** as missing. Per amount group, sort both sides by date and minimize total date difference across the group. Sanity check: the lag distribution should cluster at zero to two days. Any large lag means a cluster was mis-assigned.
 3. **Check monthly sums**, which is independent of how you paired rows. Per month, the statement net minus the app net must equal the flagged rows' sum, to the penny. Residuals are usually one transaction sitting on opposite sides of a month boundary. Trace each one before accepting it.
-4. **Re-query each candidate live** before posting: same account, exact amount, a slightly wider date window, including voided and pending rows. A same-amount hit in a *different* account is usually the other leg of a transfer and does not rescue the missing row.
+4. **Re-query each candidate live** before posting: same account, exact amount, a slightly wider date window, including pending rows and **explicitly asking for deleted rows to be included** (the connection hides soft-deleted rows unless you request them, and a deleted twin means the row was removed on purpose, not missed). A same-amount hit in a *different* account is usually the other leg of a transfer and does not rescue the missing row.
 5. **Categorize by sibling precedent, not proposal.** The books already show how each merchant is categorized: mirror the same merchant's existing rows, with the category still fetched fresh from the chart of accounts. Where a description maps to many categories across the client's own history with no consistent precedent (generic e-transfer memos are the classic case), there is no reliable sibling: default to other expense or other revenue, untaxed, and **flag the row.** Never infer one. Watch for a same-amount out-then-in pair a few days apart, which is often a returned transfer and should be judged as a pair.
 6. **Sales tax by sibling precedent too, and keep it era-consistent.** A merchant that was untaxed during the gap's period stays untaxed even if it became taxed later. Where a recurring charge has same-total siblings, your computed tax must reproduce the app's stored tax to the penny, which is what validates your rounding. No precedent and no invoice evidence means untaxed and flagged.
 7. **Request the statement that covers through the period end.** A fill built from monthly statements only reaches the last statement's cutoff, so the final weeks of a period silently stay missing. Ask for the next statement.
@@ -216,7 +219,7 @@ If the cause looks like the feed silently dropping rows on one account while oth
 - **Inventing a category or a tax rate.** Both are available. Ask or read them.
 - **Netting the two shareholder directions** on distinct opening balances.
 - **Forgetting the clearing instruction** on an opening balance, so the later payment gets expensed and double-counts.
-- **Booking rounding pennies to FX gain or loss.** There is no residual to book.
+- **Booking rounding pennies to FX gain or loss.** A conversion difference against the client's filed figures is a review-table item to agree on, not a posting.
 - **Blended tax rates on a mixed row.** Split it.
 - **Posting into a filed or locked period** without instruction.
 - **Reporting a migration as tied when an account's balance does not match.** Investigate first.
