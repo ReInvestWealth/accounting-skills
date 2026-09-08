@@ -1,6 +1,6 @@
 # ReInvestWealth Skills
 
-Open-source [Agent Skills](https://agentskills.io) for accounting work on books kept in [ReInvestWealth](https://reinvestwealth.com). They run in Claude, Codex, and any assistant that speaks the same standard.
+Open-source [Agent Skills](https://agentskills.io) for accounting work on books kept in [ReInvestWealth](https://reinvestwealth.com). They run in Claude, ChatGPT, Codex, and any assistant that speaks the same standard.
 
 Each skill is a single `SKILL.md` file: a written procedure that tells the assistant how to do one job properly. They were built for our own CPAs and bookkeeping work, and they encode the parts that are easy to get wrong, such as proving that revenue figures are net of sales tax before publishing them, anchoring opening balances to a filed return rather than to the ledger, and never posting to a client's books without a reviewed plan.
 
@@ -10,7 +10,7 @@ MIT licensed. Fork them, change them, use them on your own clients.
 
 | Skill | What it does | Writes to your books |
 |---|---|---|
-| `riw-catch-and-correct` | Catches the mistakes that skew the numbers (duplicates, miscoded transfers, refunds, shareholder movements, loan payments, FX discrepancies, sales tax errors), pulls receipts from connected email or drive as evidence, grades what it finds, and corrects approved items. The scan itself is read-only | **On approval** |
+| `riw-catch-and-correct` | Catches the mistakes that skew the numbers (duplicates, miscoded transfers, refunds, shareholder movements, loan payments, FX discrepancies, sales tax errors), pulls receipts and confirmations from connected email, file storage, or calendar as evidence, grades what it finds, and corrects approved items. The scan itself is read-only | **On approval** |
 | `riw-monday-brief` | One page for Monday morning: cash position, last week's sales and spending, invoices waiting to be paid, and the three things worth doing this week | No |
 | `riw-monthly-health-check` | The owner's month in review: the month against the months before it, cash and runway, receivables, what changed in spending, and whether the books are clean enough to trust. One page, graded | No |
 | `riw-cash-flow-forecast` | Cash outlook at three horizons: 90 days week by week, or one or two years month by month, from open invoices, recurring costs, and known tax dates. Names the low point, which is what answers "can I make payroll" | No |
@@ -27,7 +27,7 @@ These skills read and write your books through the **ReInvestWealth accounting M
 
 Without the MCP server connected, a skill will load and then tell you it has no data to work with.
 
-The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-catch-and-correct`, `riw-migrate-history`, and `riw-ar-ap-recon` being Canada specific.
+The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-catch-and-correct`, `riw-migrate-history`, `riw-ar-ap-recon`, and the sales-tax lines in `riw-monthly-health-check` being Canada specific.
 
 ## Install
 
@@ -56,16 +56,16 @@ Copy any skill directory into `~/.claude/skills/` for personal use, or your proj
 
 ## A word about the ones that write
 
-`riw-catch-and-correct`, `riw-migrate-history`, and `riw-ar-ap-recon` post entries into real bookkeeping data, and ReInvestWealth deliberately protects the audit trail: a posted transaction cannot be deleted, and its amount and date cannot be changed after it is created. Corrections mean voiding and reposting, permanently visible.
+Five skills post into real bookkeeping data: `riw-catch-and-correct`, `riw-migrate-history`, `riw-ar-ap-recon`, and the final phase of `riw-prepare-financials-ca` and `riw-prepare-financials-us`. ReInvestWealth deliberately protects the audit trail. A posted transaction's amount and date cannot be changed after it is created, and removal is a soft delete: the row stays on record, disappears from lists and reports, and can be restored. So a wrong amount or date is never an edit. The correction paths are to recategorize or annotate the existing row, soft-delete it, or post a new entry, and every one of those leaves a trace.
 
-All three are written around that. They plan everything first, assert their own tie-outs, show you a full review table, and wait for your explicit approval before they write anything. **Do not shortcut that gate**, and read the skill before you run it on a client.
+All five are written around that. They plan everything first, assert their own tie-outs, show you a full review table, and wait for your explicit approval before they write anything. **Do not shortcut that gate**, and read the skill before you run it on a client.
 
 ## What these are, and what they are not
 
 These skills are written procedures, not a service. Running one does not create an accounting, bookkeeping, or tax engagement with ReInvestWealth, and nothing they produce is accounting, tax, or financial advice.
 
-- **Output is review-ready, not file-ready.** `riw-prepare-financials-ca` produces statements on a compilation basis for a CPA to review. It does not file anything, and it does not replace professional judgment.
-- **You are responsible for what gets posted.** The skills that write do so into real bookkeeping data, and posted entries are permanent by design. Read the review table before you approve it.
+- **Output is review-ready, not file-ready.** `riw-prepare-financials-ca` and `riw-prepare-financials-us` produce statements for a CPA to review. They do not file anything, and they do not replace professional judgment.
+- **You are responsible for what gets posted.** The skills that write do so into real bookkeeping data, and a posted entry can be hidden but never erased. Read the review table before you approve it.
 - **An assistant can be confidently wrong.** Every skill here is written to show its assumptions and its tie-outs for exactly that reason. Check them.
 
 The software is provided as is, without warranty of any kind, as set out in [LICENSE](LICENSE).
