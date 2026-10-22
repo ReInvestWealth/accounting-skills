@@ -20,6 +20,7 @@ MIT licensed. Fork them, change them, use them on your own clients.
 | `riw-monthly-review-email` | The monthly client review: a short three-page report plus a draft email, for a bookkeeper to send instead of the monthly call | No |
 | `riw-ar-ap-recon` | Accrual AR and AP for cash-basis books: accrues open invoices and bills, ages them in a workbook the accountant reviews, matches the payments that settle them, and books the entries. Plan, review, approve, apply | **Yes** |
 | `riw-migrate-history` | Move a client's history into ReInvestWealth: opening balances, historical transactions, or both. Plan, review, approve, apply | **Yes** |
+| `riw-bank-sync` | Checks the books against any bank or credit card provider by working your own computer. It opens the bank's website, waits while you sign in, adds the bank's accounts to the books if they are not there yet (handy for banks that cannot connect through Plaid without switching off two-step verification), downloads recent transactions (reading older statements when you want to go back further), and adds only the ones that are missing once you approve a plain-language summary. It never sees your password and never moves money. It uses ReInvestWealth's notes on each bank, adapts when a website changes, and sends back a short report with none of your financial details. It can run on a schedule and, if you opt in, add missing transactions on its own the way a bank feed does | **On approval** |
 
 ## What you need
 
@@ -27,7 +28,7 @@ These skills read and write your books through the **ReInvestWealth accounting M
 
 Without the MCP server connected, a skill will load and then tell you it has no data to work with.
 
-The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. The rest work in both Canada and the United States, with the sales-tax handling in `riw-catch-and-correct`, `riw-migrate-history`, `riw-ar-ap-recon`, and the sales-tax lines in `riw-monthly-health-check` being Canada specific.
+The year-end pair is country specific: `riw-prepare-financials-ca` is built around the T2, GIFI codes, and CCA, and `riw-prepare-financials-us` around the 1120, 1120-S, and MACRS. `riw-bank-sync` needs an assistant that can control your computer. The rest work in both Canada and the United States, with the sales-tax handling in `riw-catch-and-correct`, `riw-migrate-history`, `riw-ar-ap-recon`, `riw-bank-sync`, and the sales-tax lines in `riw-monthly-health-check` being Canada specific.
 
 ## Install
 
@@ -56,9 +57,9 @@ Copy any skill directory into `~/.claude/skills/` for personal use, or your proj
 
 ## A word about the ones that write
 
-Five skills post into real bookkeeping data: `riw-catch-and-correct`, `riw-migrate-history`, `riw-ar-ap-recon`, and the final phase of `riw-prepare-financials-ca` and `riw-prepare-financials-us`. ReInvestWealth deliberately protects the audit trail. A posted transaction's amount and date cannot be changed after it is created, and removal is a soft delete: the row stays on record, disappears from lists and reports, and can be restored. So a wrong amount or date is never an edit. The correction paths are to recategorize or annotate the existing row, soft-delete it, or post a new entry, and every one of those leaves a trace.
+Six skills post into real bookkeeping data: `riw-catch-and-correct`, `riw-migrate-history`, `riw-ar-ap-recon`, `riw-bank-sync`, and the final phase of `riw-prepare-financials-ca` and `riw-prepare-financials-us`. ReInvestWealth deliberately protects the audit trail. A posted transaction's amount and date cannot be changed after it is created, and removal is a soft delete: the row stays on record, disappears from lists and reports, and can be restored. So a wrong amount or date is never an edit. The correction paths are to recategorize or annotate the existing row, soft-delete it, or post a new entry, and every one of those leaves a trace.
 
-All five are written around that. They plan everything first, assert their own tie-outs, show you a full review table, and wait for your explicit approval before they write anything. **Do not shortcut that gate**, and read the skill before you run it on a client.
+All six are written around that. They plan everything first, assert their own tie-outs, show you a full review table, and wait for your explicit approval before they write anything. **Do not shortcut that gate**, and read the skill before you run it on a client. The one exception is `riw-bank-sync`, which you can switch to automatic mode, so it adds missing bank transactions the way a bank feed does and reports what it added afterwards.
 
 ## What these are, and what they are not
 
