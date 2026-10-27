@@ -1,5 +1,5 @@
 ---
-name: "riw-bank-sync"
+name: "riw-bank-transaction-import"
 description: "Bring a business's books in ReInvestWealth up to date with any bank or credit card provider by working the user's own computer: open the bank's website, wait while the user signs in, download recent transactions (and read older statements when the user wants to go back further than the download allows), compare them with what is already in the books, and add only what is missing after the user approves a plain-language summary. Sets up the bank's accounts in the books on the first run when they are not there yet, which is common for banks that cannot connect through Plaid without switching off two-step verification. Uses ReInvestWealth's notes on each bank as a starting point, adapts when a website has changed, and reports what changed. Never types or sees passwords, never moves money, never posts a duplicate. Built for owners who are not accountants. Use when someone asks to sync, update, catch up, or check their books against their bank (for example RBC, CIBC, Scotiabank, EQ Bank, Venn, or Float), pull bank or card transactions, fill in missing bank transactions, add a bank account without Plaid, or set up a regular bank check."
 license: "MIT"
 compatibility: "Needs computer use (the assistant controlling the user's screen, mouse, and keyboard) and the ReInvestWealth accounting MCP server with write access. The user signs in to their bank themselves. WRITES TO PRODUCTION BOOKKEEPING DATA on approval. Works with any bank's regular online banking; sales tax handling is Canada specific."
@@ -11,7 +11,7 @@ metadata:
   risk: medium
 ---
 
-# Bank Sync
+# Bank Transaction Import
 
 You are helping a business owner make sure their books match their bank. You open the bank's website on their computer, they sign in, you download their recent transactions, compare them with what ReInvestWealth already has, and, once they say yes, add whatever is missing.
 
@@ -113,7 +113,7 @@ If the notes list portals to stay out of, or you land on a separate portal the u
 Signing in takes the user a minute or two. Use that time to read everything from ReInvestWealth that does not depend on what is at the bank:
 
 1. **The business's accounts and bank connections.** Note every account at this bank already in the books: its name, type, last four digits, currency, and whether it is a statement account (can receive new transactions) or a Plaid account (active, or disconnected). Many users will have **none yet**: some banks make people turn off two-step verification to connect through Plaid, which most people rightly refuse, and this skill is the alternative. On a first run, expect to create accounts in Step 3.
-2. **Where the last run stopped.** One search per account at this bank, filtered to that account with the note containing "Added from" and a limit of 1: results come newest first, so that one row is the latest, and its note carries the date of that run. A run that added nothing leaves no note, so also check your own notes from earlier runs, and save the run date there at the end of every run.
+2. **Where verified coverage stopped.** Read each account's saved progress from your own notes or the user's preferences: the agreed original start date and the last date fully verified in Step 7. A run date or an "Added from" note proves only that a run was attempted, not that every earlier row was handled. Never use either as the checkpoint. If saved progress is unavailable, ask how far back to check in Step 3.
 3. **The category list, fetched fresh**, the business's sales tax registration, and its automation rules.
 4. **The books' transactions for any account at this bank already there**, using the efficient pull below. On a first run the start date is not settled yet, so pull from the date you will suggest in Step 3 and extend it if the user picks an earlier one.
 
@@ -142,7 +142,7 @@ Match each one to the books by last four digits first, then by name and type. Ev
 
 Then settle the date range.
 
-**First time for this bank** (no notes from an earlier run, and no row in any of its accounts whose note says "Added from"): **always ask how far back to go**, for every account, including ones already in the books. Make one suggestion so the user can just say yes:
+**First time for this bank:** **always ask how far back to go**, for every account, including ones already in the books. Also ask for any account whose saved progress is unavailable, even if it has "Added from" notes. Make one suggestion so the user can just say yes:
 
 - Suggest **the start of this year**, or the date the business started using ReInvestWealth if that is later.
 - If an account already has transactions in the books, mention where they stop, so the choice makes sense: "Your books already have RBC Chequing up to Aug 3." Going back further than that is fine. Rows already in the books are matched and skipped, never added twice.
@@ -150,7 +150,7 @@ Then settle the date range.
 
 **After the first time**, do not ask again:
 
-- **Account synced before:** start **14 days before the date of the last run** (the run date is in the notes this skill writes, and in your own notes). The overlap is cheap, because rows already in the books are matched and skipped, and it is what catches the pending purchases and held-back recent rows from last time (Step 5). Starting the day after the newest row added would lose them for good.
+- **Account with saved progress:** start **14 days before its last fully verified date**, but no earlier than its agreed original start date. If no date has been fully verified yet, start at the original start date. The overlap catches recently settled purchases; the checkpoint rule in Step 7 keeps older failed or held-back rows in scope even after many runs. Never substitute the last run date or newest row added.
 - **Account added to the books since the last run:** ask, the same way as the first time, for that account only.
 
 Any start date works, however far back. Bank downloads usually cover only recent months, so Step 4 fills anything older from monthly statements. You do not need to explain this to the user unless they ask; just mention it may take a little longer.
@@ -169,6 +169,8 @@ Save the answer with the user's preferences and don't ask again. If the business
 
 The user can say "yes", pick another date, or name an account to skip. If an account already in the books has transactions, a short "(your books have Chequing up to Aug 3)" is enough.
 
+Save each account's agreed original start date before continuing, with no verified date on its first run. Keep this progress with the user's preferences or your own notes, never in the run report. A failed or interrupted run must never advance the checkpoint.
+
 If there is nothing to ask, don't ask. Just say:
 
 > Signed in. Getting your transactions now.
@@ -176,7 +178,7 @@ If there is nothing to ask, don't ask. Just say:
 **Creating accounts.** Adding an account is always a question, even in automatic mode, because it is a one-time setup choice. On a yes:
 
 - Create each account **one at a time**, then list the accounts again and confirm it is there before creating the next. **Never repeat a create call**: it is not protected against doubles, and a retry makes a second account. If a call's result is unclear, list the accounts first.
-- A business can have **at most 5 accounts of this kind**. If the user wants more than there is room for, say so and ask which matter most.
+- A business can have **at most 25 custom accounts**. If the user wants more than there is room for, say so and ask which matter most.
 - Name it the way the bank shows it (for example "RBC Visa"), with the bank's name as the institution, its type, currency, and last four digits.
 
 **Starting balance.** A new account starts at **$0** in the books, so its balance will not match the bank until its starting balance is added. The statements from Step 4 give you that number exactly. Whether this skill posts it depends on the books:
@@ -232,7 +234,7 @@ Do this in code, not by eye, on the data already pulled in Steps 2 and 4. **No n
    - **Leave out missing rows dated in the last 7 days.** Report them as waiting for the bank feed. If the feed never brings them in, the next run's overlap picks them up, and by then they are safe to add.
    - **If the connection is unhealthy or has not updated in more than 3 days**, also leave out every missing row dated after its last update. Tell the user in plain words that the bank connection needs attention, and point them to reconnect it in the app. A reconnect usually brings those rows in by itself.
    - Statement accounts (the ones this skill creates) and disconnected Plaid accounts have no feed, so nothing is held back for them.
-5. **Double-check every missing row before you suggest it**, against the pull you already have (it already includes 14 extra days, pending rows, and deleted rows): look for the same account and exact amount within 14 days. A deleted match means it was removed on purpose: drop it. A match in the old, disconnected connection for the same account means it is already in the books: drop it. A same-amount match in a *different* account is often the other half of a transfer: keep the row, and note the link.
+5. **Double-check every missing row before you suggest it**, against the pull you already have (it already includes 14 extra days, pending rows, and deleted rows). **Keep matching one to one across both passes:** retain the transaction IDs consumed by steps 1 and 2, and pair remaining bank rows only with **unclaimed** deleted rows or rows in the old, disconnected connection for the same account and exact amount within 14 days. Use the repeated-amount ordering from step 2 and mark every new pair consumed immediately. A deleted pair means the row was removed on purpose; a disconnected-account pair means it is already in the books. Exclude those bank rows from additions, carrying the pairs into the totals and final verification. Never suppress another bank row using an already-consumed match: if Jan 1 and Jan 8 each have a $15 charge and only Jan 1 is in the books, Jan 8 is still missing. A same-amount match in a *different* account is often the other half of a transfer: keep the row, and note the link.
 6. **Check the totals**, which does not depend on how you paired rows. Take the bank's net total for the range, and the books' net total for the same dates. Their difference must equal the missing rows (including any held back) minus the only-in-books rows, to the cent, once you account for matched pairs that sit on opposite sides of the range's edge. Trace every cent of any difference before you show anything to the user.
 7. **Check the balance, if you can.** Compare the bank's current balance with the books' balance for the account. After the missing rows are added they should agree, apart from pending and held-back items. For an account created in this run, they will differ by exactly the starting balance from Step 4. Assert that: the bank's balance minus everything in the books must equal the starting balance to the cent. If it does not, a row is missing or misread somewhere. Otherwise, if they won't agree, say so in plain words and treat it as something to look at, not something to fix here.
 
@@ -271,17 +273,18 @@ Rules for this step:
 - **More than 15 rows:** don't list them. Make a clean Excel file (columns: Date, What, Amount, Category, plus Sales tax if it is on; one sheet per account; a total at the bottom), and say "**120 transactions are missing** (Jan to Oct). Here's the list: [file]. **Add them?**"
 - **Starting balance,** if Step 3 says you can add it: one extra table row, "Dec 31 | Starting balance | -$1,204.18 | Opening balance".
 - **Don't mention** pending rows, held-back rows, or rows only in the books here. They go in the final summary.
-- **Nothing missing:** "✅ Your books already match RBC. Nothing to add." Then go to Step 7, steps 5 and 6.
+- **Nothing missing:** "✅ Your books already match RBC. Nothing to add." Then go to Step 7, steps 4 through 7, including verification and saving progress even when no rows were added.
 - If the user asks for changes, show the updated list and ask again. Never post a list they haven't seen, and never post in the same turn as the question.
 
 ## Step 7: Add what was approved, then check your work
 
-1. **Re-check right before posting.** Something may have been added while you waited. Re-run the **one account-filtered pull** for each account, covering only the dates of the approved rows plus 3 days on each side, and re-match in code. Drop any rows that now exist and tell the user. Do not search row by row.
-2. **Post the approved rows**, oldest first, up to 250 rows per call, and check each call's result before sending the next. Post the starting balance, if approved, before the rest. Use the bank's date, the exact amount and sign, the bank's description as the name, the approved category and tax, and a short note saying where it came from: "Added from RBC online banking on Oct 21, 2026" or "Added from RBC statement for January 2026". Those notes are how the next run knows where to start.
+1. **Re-check right before posting.** Something may have been added while you waited. Re-run the **one account-filtered pull** for each account's comparison range with the same 14-day padding as Step 2, and repeat both matching passes in code against all bank rows in that range, including those already matched. Matching only approved candidates could reuse a row already claimed by another bank transaction. Drop any approved rows that now exist and tell the user. Do not search row by row.
+2. **Post the approved rows**, oldest first, up to 250 rows per call, and check each call's result before sending the next. Post the starting balance, if approved, before the rest. Use the bank's date, the exact amount and sign, the bank's description as the name, the approved category and tax, and a short note saying where it came from: "Added from RBC online banking on Oct 21, 2026" or "Added from RBC statement for January 2026". Those notes record the source, not verified sync coverage.
 3. **Read the result.** The connection reports which rows were created and which failed, with reasons. **Never re-send a create call** because it looked slow or unclear: there is no protection against double-posting, so a retry can create duplicates. If anything is unclear, re-read the books first and post only what is still missing.
-4. **Prove it.** Re-run the one account-filtered pull for each account's range and redo the Step 5 comparison in code. Every bank row in the range, except the pending and held-back ones, must now match exactly one row in the books, and the only-in-books list must be the same as before (nothing new). If anything does not line up, say so plainly.
-5. **Sign out of the bank.**
-6. **Send the run report** (below).
+4. **Prove it.** Re-run the one account-filtered pull for each account's range with the same 14-day padding as Step 2 and redo the Step 5 comparison in code. Every bank row in the range, except the pending and held-back ones, must now match exactly one row in the books, and the only-in-books list must be the same as before (nothing new). If anything does not line up, say so plainly.
+5. **Save verified progress per account.** Extend its saved verified date only through continuous, completely read and checked bank coverage whose rows passed the final comparison, up to the end of the range actually checked. Prior verified coverage need not be read again outside the overlap. Stop before the earliest pending, held-back, failed, or still-missing row, or any date with missing or unbalanced source coverage. If such a date is on or before the saved checkpoint, rewind to the preceding day (or clear the verified date if no part of the agreed range is verified). If the final comparison cannot be proven, do not advance. This applies to empty runs too: adding nothing is not proof of coverage. Keep the original start date and the checkpoint available for the next run; recording a new run date must never advance them. For example, an October catch-up with a failed January row must still include January next time, and a stale-feed row held for a month must remain in scope until resolved.
+6. **Sign out of the bank.**
+7. **Send the run report** (below).
 
 Then the final summary. This is the one message with a little detail, still easy to read: what was added, then anything worth a look.
 
@@ -353,13 +356,14 @@ At most one short message, only on the first run for this bank (or the first suc
 - **Treating the bank notes as rules.** They are a head start. When the screen disagrees, trust the screen and report the difference.
 - **Putting anything about the user's money in the run report.** Fixed fields and codes only.
 - **Adding the last few days to an account with a live bank feed.** The feed posts them a few days late, and the result is a duplicate. Hold them back and let the next run's overlap catch any the feed misses.
-- **Starting the next run right after the last row added.** Pending and held-back rows from last time fall through the gap. Overlap by 14 days.
+- **Starting the next run from its last attempt or newest row added.** Overlap the saved verified date by 14 days, bounded by the agreed original start date. Never advance past an unresolved row or a gap in source coverage.
 - **Adding pending transactions.** Their amounts change and they reappear later as new rows, which creates duplicates.
 - **Trusting the sign on a credit card file.** Prove it on rows that are in both places first.
 - **Covering the same dates from both the download and a statement.** Each date gets one source. Check the 7 days around the handover for the same purchase dated differently.
 - **Using a statement that does not balance.** Opening plus rows must equal closing, to the cent. Re-read it; never nudge a number.
 - **Posting a starting balance into books that already have history before it.** It may already be counted. Give the figure and hand off instead.
 - **Matching on description.** The bank and the books word things differently. Match on account, exact amount, and date.
+- **Reusing a matched row in the wider duplicate check.** Both passes share the same consumed transaction IDs; one old or deleted row cannot suppress two bank transactions.
 - **Forgetting deleted rows.** A transaction someone deleted on purpose looks "missing" unless you ask for deleted rows.
 - **Retrying a create that looked like it failed.** Re-read first. A retry can double-post.
 - **Deleting the only-in-books rows.** Report them. Cleaning them up belongs to `riw-catch-and-correct`.
