@@ -166,7 +166,7 @@ The app rolls prior-period profit and loss into retained earnings, so these D-mi
 | Input | Notes |
 |---|---|
 | Transactions file | CSV or spreadsheet. One file per account is cleanest; a combined file needs an account column |
-| Target accounts | Which connected account each set of rows belongs to. If a needed account does not exist yet, the connection can create a custom one (name, type, currency, optional last four digits); a company can hold at most five custom accounts, so plan the account list before creating any |
+| Target accounts | Which connected account each set of rows belongs to. If a needed account does not exist yet, the connection can create a custom one (name, type, currency, optional last four digits); a company can hold at most 25 custom accounts, so plan the account list before creating any |
 | Period | The date range to import, and where the live bank feed or statement uploads take over |
 | Currency | Per account, and per row only if the file mixes them |
 | Ending balances | The statement balance at the end of the imported period. **This is the verification anchor** |
