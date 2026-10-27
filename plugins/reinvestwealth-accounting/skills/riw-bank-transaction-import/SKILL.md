@@ -366,7 +366,7 @@ Change codes: `no_notes`, `signin_moved`, `domain_new`, `user_opened_site`, `dow
 
 **Never in the report:** transactions, amounts, dates of transactions, balances, account names or numbers, people's or merchants' names, anything typed on the bank's site, screenshots, or free-text descriptions. If a `where` would need any of that to make sense, leave it out.
 
-The report is safe to resend if you are not sure it arrived: the server keeps one report per `runId`.
+The report is safe to resend if you are not sure it arrived: the server keeps one report per bank per `runId` within the business. Retrying replaces only that bank's report.
 
 ## Step 8: Offer to make it easier next time
 
