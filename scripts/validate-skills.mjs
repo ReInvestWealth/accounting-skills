@@ -41,8 +41,9 @@ const NESTABLE = new Set(["metadata", "allowed-tools"]);
 
 // Spec limits.
 const MAX_COMPATIBILITY = 500;
-// Claude Code truncates the description in the skill listing at 1536 chars.
-const MAX_DESCRIPTION = 1536;
+// claude.ai skill uploads reject a description over 1024 chars (the Agent
+// Skills spec limit). Claude Code allows more, so do not raise this to match it.
+const MAX_DESCRIPTION = 1024;
 
 const errors = [];
 const warnings = [];
